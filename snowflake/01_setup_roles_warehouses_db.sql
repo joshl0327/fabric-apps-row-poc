@@ -148,11 +148,20 @@ SHOW GRANTS TO USER JLUGO;
 
 -- ---------------------------------------------------------------------
 -- 8. Least-privilege check (run these lines one at a time, by hand)
---    Each should FAIL with an "insufficient privileges" or
---    "does not exist or not authorized" error. That's the point.
+--    New users default to SECONDARY ROLES = ALL, which quietly adds the
+--    privileges of every role you hold (including ACCOUNTADMIN) for
+--    warehouse use and reads. Turn secondary roles off to test a role
+--    on its own. Creating objects always uses the primary role only.
 -- ---------------------------------------------------------------------
 -- USE ROLE ROLE_REPORTER;
--- USE WAREHOUSE WH_TRANSFORM_XS;                  -- reporter can't use the transform warehouse
--- CREATE TABLE ROW_DB.ANALYTICS.SHOULD_FAIL (x INT); -- reporter can't create tables
+-- USE SECONDARY ROLES NONE;
+-- USE WAREHOUSE WH_TRANSFORM_XS;                     -- should FAIL: not the reporter's warehouse
+-- CREATE TABLE ROW_DB.ANALYTICS.SHOULD_FAIL (x INT); -- should FAIL: reporter is read-only
+--
 -- USE ROLE ROLE_APP_SYNC;
--- SELECT * FROM ROW_DB.RAW.ANYTHING;              -- app sync can't see RAW
+-- USE SECONDARY ROLES NONE;
+-- USE SCHEMA ROW_DB.RAW;                             -- should FAIL: app sync can't see RAW
+-- USE SCHEMA ROW_DB.APP_SYNC;                        -- should SUCCEED
+--
+-- USE ROLE ROLE_BI_DEVELOPER;
+-- USE SECONDARY ROLES ALL;                           -- back to normal for day-to-day work
