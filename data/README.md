@@ -91,6 +91,60 @@ Those issue counts equal the number of rows in `answer_key.csv` of that type.
   This file is **not** a data source; it is how we prove the Snowflake
   cleaning rules catch every injected problem.
 
+## Land into Snowflake RAW
+
+At work, Azure Data Factory lands source files in Snowflake `RAW` as-is and
+cleaning happens later. This POC does the same in four steps. Nothing is
+cleaned here — values land exactly as they arrived.
+
+1. **Build the landing CSVs.** `to_landing.py` turns the generator output into
+   the five CSVs that get uploaded:
+
+   ```sh
+   python data/to_landing.py
+   ```
+
+   | flag | default | meaning |
+   |------|---------|---------|
+   | `--in` | `data/out` | directory holding the generator output |
+   | `--out` | `data/out/landing` | where the landing CSVs are written |
+
+   `circuits.csv`, `districts.csv`, `vendors.csv`, and `answer_key.csv` are
+   copied through unchanged. `row_clearing_plan.xlsx` becomes
+   `row_clearing_plan.csv`: one row per spreadsheet row with a `source_row`
+   column (the Excel row number, matching `excel_row` in the answer key), every
+   cell as raw text (no trimming, blanks empty), real date cells as ISO
+   `YYYY-MM-DD`, and a `*_celltype` column (`date` / `text` / `blank`) for each
+   of the two date columns so a typed `"2027-03-15"` can be told from a real
+   date. Output is deterministic.
+
+2. **Create the RAW objects.** In Snowsight, open a worksheet and run
+   `snowflake/02_raw_objects.sql` (it sets role `ROLE_LOADER` itself). This
+   creates the `FF_RAW_CSV` file format, the `LANDING` stage, and one VARCHAR
+   table per file. Safe to re-run.
+
+3. **Upload the five landing CSVs** from `data/out/landing/` to the `LANDING`
+   stage: Snowsight → Data → Databases → `ROW_DB` → `RAW` → Stages →
+   `LANDING` → **+ Files**, with role `ROLE_LOADER`. Upload `circuits.csv`,
+   `districts.csv`, `vendors.csv`, `row_clearing_plan.csv`, and
+   `answer_key.csv`.
+
+4. **Load the tables.** Run `snowflake/03_raw_load.sql`. Each table is a full
+   refresh (truncate + `COPY ... FORCE = TRUE`), so re-running gives the same
+   counts every time. The verification queries at the end should show:
+
+   | table | rows |
+   |-------|------|
+   | `CIRCUITS` | 153 |
+   | `DISTRICTS` | 5 |
+   | `VENDORS` | 6 |
+   | `ROW_CLEARING_PLAN` | 157 |
+   | `ANSWER_KEY` | 69 |
+
+   (with the generator run as `--seed 42 --as-of 2026-10-14`), plus non-zero
+   counts for trailing-space vendors and text-in-date `Next Clearing` cells —
+   proof the mess survived the landing.
+
 ## Reproducibility
 
 The same `--seed` and `--as-of` produce identical CSV rows and identical
