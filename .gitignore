@@ -1,0 +1,32 @@
+# --- Secrets: never commit ---
+.env
+.env.*
+!.env.example
+*.p8
+*.pem
+secrets/
+
+# --- Claude Code: personal overrides stay local (shared rules are in .claude/settings.json) ---
+.claude/settings.local.json
+
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+
+# --- Node / Fabric App ---
+node_modules/
+dist/
+
+# --- Generated synthetic data (re-create with: python data/generate.py) ---
+data/out/
+
+# --- Power BI: PBIP only, no binaries or local caches ---
+*.pbix
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
