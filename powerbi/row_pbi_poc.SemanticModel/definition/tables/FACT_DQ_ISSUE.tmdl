@@ -1,0 +1,56 @@
+table FACT_DQ_ISSUE
+	lineageTag: d69e1da4-0735-4a2d-a1f5-24676168a222
+
+	column FEEDER_ID
+		dataType: string
+		lineageTag: 3fdc2853-1f86-406e-b1ab-58a8674a4e91
+		summarizeBy: none
+		sourceColumn: FEEDER_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column SOURCE_COLUMN
+		dataType: string
+		lineageTag: 9000a9ff-3b2f-4fc6-b39c-84af06d9ca7d
+		summarizeBy: none
+		sourceColumn: SOURCE_COLUMN
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISSUE_TYPE
+		dataType: string
+		lineageTag: 61e085f5-975c-4aef-a85c-c71513166440
+		summarizeBy: none
+		sourceColumn: ISSUE_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column RAW_VALUE
+		dataType: string
+		lineageTag: 3b40845b-2e4f-4660-a1b9-0e4604f8acd1
+		summarizeBy: none
+		sourceColumn: RAW_VALUE
+
+		annotation SummarizationSetBy = Automatic
+
+	column CLEAN_VALUE
+		dataType: string
+		lineageTag: 8642120b-bd37-4d7a-ba1b-2d920cdf1002
+		summarizeBy: none
+		sourceColumn: CLEAN_VALUE
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FACT_DQ_ISSUE = m
+		mode: import
+		source =
+				let
+				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
+				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
+				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
+				    FACT_DQ_ISSUE_View = ANALYTICS_Schema{[Name="FACT_DQ_ISSUE",Kind="View"]}[Data]
+				in
+				    FACT_DQ_ISSUE_View
+
+	annotation PBI_ResultType = Table
+

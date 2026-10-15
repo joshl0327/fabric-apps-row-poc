@@ -1,0 +1,88 @@
+table DIM_CIRCUIT
+	lineageTag: c47f3d32-0a96-4382-a358-27d2c9adfdf3
+
+	column FEEDER_ID
+		dataType: string
+		lineageTag: 756fdd4d-0777-4d60-9d5e-c397c5862872
+		summarizeBy: none
+		sourceColumn: FEEDER_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CIRCUIT_NUM
+		dataType: double
+		lineageTag: 0f7a33de-711d-4bfb-982b-a09598f54020
+		summarizeBy: sum
+		sourceColumn: CIRCUIT_NUM
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column CIRCUIT_NAME
+		dataType: string
+		lineageTag: 72347dab-61ea-4809-bb31-25f3b58bdae5
+		summarizeBy: none
+		sourceColumn: CIRCUIT_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column SUBSTATION_NUM
+		dataType: double
+		lineageTag: 196608d7-3b5e-420d-89a8-fd7f0003ad55
+		summarizeBy: sum
+		sourceColumn: SUBSTATION_NUM
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column SUBSTATION_NAME
+		dataType: string
+		lineageTag: 109152d7-b1c7-42ba-934e-c2e901ff3d74
+		summarizeBy: none
+		sourceColumn: SUBSTATION_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column LINE_MILES
+		dataType: double
+		lineageTag: 2c143e7c-f063-405d-969e-4d8c2d095d66
+		summarizeBy: sum
+		sourceColumn: LINE_MILES
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RESPONSIBLE_DISTRICT_ID
+		dataType: double
+		lineageTag: ccfa7b64-846f-4141-966d-86848b095ea6
+		summarizeBy: none
+		sourceColumn: RESPONSIBLE_DISTRICT_ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RESPONSIBLE_DISTRICT_NAME
+		dataType: string
+		lineageTag: 73eb3bc4-816b-4314-b2b8-e204be84bbd0
+		summarizeBy: none
+		sourceColumn: RESPONSIBLE_DISTRICT_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DIM_CIRCUIT = m
+		mode: import
+		source =
+				let
+				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
+				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
+				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
+				    DIM_CIRCUIT_View = ANALYTICS_Schema{[Name="DIM_CIRCUIT",Kind="View"]}[Data]
+				in
+				    DIM_CIRCUIT_View
+
+	annotation PBI_ResultType = Table
+

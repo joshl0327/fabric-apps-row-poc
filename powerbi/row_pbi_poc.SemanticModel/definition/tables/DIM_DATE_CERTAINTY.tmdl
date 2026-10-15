@@ -1,0 +1,34 @@
+table DIM_DATE_CERTAINTY
+	lineageTag: 7cfc6882-95c0-4353-8b83-c02a8eed2833
+
+	column DATE_CERTAINTY
+		dataType: string
+		lineageTag: 21ee0d85-ca5c-40ab-8252-1028469dd910
+		summarizeBy: none
+		sourceColumn: DATE_CERTAINTY
+
+		annotation SummarizationSetBy = Automatic
+
+	column SORT_ORDER
+		dataType: double
+		lineageTag: 3c8aa3a6-f955-4c40-b8f2-0641f0ab422f
+		summarizeBy: none
+		sourceColumn: SORT_ORDER
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition DIM_DATE_CERTAINTY = m
+		mode: import
+		source =
+				let
+				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
+				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
+				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
+				    DIM_DATE_CERTAINTY_View = ANALYTICS_Schema{[Name="DIM_DATE_CERTAINTY",Kind="View"]}[Data]
+				in
+				    DIM_DATE_CERTAINTY_View
+
+	annotation PBI_ResultType = Table
+

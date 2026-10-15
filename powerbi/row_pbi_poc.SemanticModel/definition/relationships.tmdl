@@ -1,0 +1,30 @@
+relationship e84f0a1d-e34f-4f4e-bd49-1ca6e5c0f03e
+	joinOnDateBehavior: datePartOnly
+	fromColumn: FACT_ROW_PLAN.LAST_CLEARED_DATE
+	toColumn: LocalDateTable_6662a466-e1fd-4abf-8ccd-c164c1ab756d.Date
+
+relationship 22a16869-26f1-4ae8-b7c3-88c2d0e11a28
+	joinOnDateBehavior: datePartOnly
+	fromColumn: FACT_ROW_PLAN.NEXT_CLEARING_DATE
+	toColumn: LocalDateTable_b6859bf1-4328-43c4-ab85-de12aa9e80e1.Date
+
+relationship AutoDetected_21f4ebbd-62d8-4e0a-a76e-61a62796e505
+	fromColumn: FACT_DQ_ISSUE.FEEDER_ID
+	toColumn: DIM_CIRCUIT.FEEDER_ID
+
+relationship AutoDetected_5477517d-5421-4a0b-88a8-98ed55e73f11
+	fromColumn: FACT_ROW_PLAN.DATE_CERTAINTY
+	toColumn: DIM_DATE_CERTAINTY.DATE_CERTAINTY
+
+relationship AutoDetected_cf30690a-e070-4a11-86db-bd90204b5c82
+	fromColumn: FACT_ROW_PLAN.VENDOR_ID
+	toColumn: DIM_VENDOR.VENDOR_ID
+
+relationship f66dec6d-bfe9-eeec-0683-0d8b41c2125c
+	fromColumn: DIM_CIRCUIT.RESPONSIBLE_DISTRICT_ID
+	toColumn: DIM_DISTRICT.DISTRICT_ID
+
+relationship 5a35577a-cbaa-68d4-98cc-d5103595c5bf
+	fromColumn: FACT_ROW_PLAN.FEEDER_ID
+	toColumn: DIM_CIRCUIT.FEEDER_ID
+

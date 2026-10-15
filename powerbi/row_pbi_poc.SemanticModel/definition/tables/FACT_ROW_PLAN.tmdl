@@ -1,0 +1,110 @@
+table FACT_ROW_PLAN
+	lineageTag: 45e9f4c4-d15d-4d80-bad7-98781c9fc7d3
+
+	column FEEDER_ID
+		dataType: string
+		lineageTag: 2f1c4fc2-677e-4a78-9a60-8f5d287ef041
+		summarizeBy: none
+		sourceColumn: FEEDER_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column VENDOR_ID
+		dataType: double
+		lineageTag: 5c0af353-e899-4a69-8673-8901a89f1a03
+		summarizeBy: none
+		sourceColumn: VENDOR_ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column LAST_CLEARED_DATE
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 7cdefaf0-5018-4929-931a-057f8da8f471
+		summarizeBy: none
+		sourceColumn: LAST_CLEARED_DATE
+
+		variation Variation
+			isDefault
+			relationship: e84f0a1d-e34f-4f4e-bd49-1ca6e5c0f03e
+			defaultHierarchy: LocalDateTable_6662a466-e1fd-4abf-8ccd-c164c1ab756d.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column LAST_WORK_DONE
+		dataType: string
+		lineageTag: e77c5e58-4d46-4025-9894-9932c0c52509
+		summarizeBy: none
+		sourceColumn: LAST_WORK_DONE
+
+		annotation SummarizationSetBy = Automatic
+
+	column NEXT_CLEARING_DATE
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 216c42b3-7708-44be-afee-bf8967a868f7
+		summarizeBy: none
+		sourceColumn: NEXT_CLEARING_DATE
+
+		variation Variation
+			isDefault
+			relationship: 22a16869-26f1-4ae8-b7c3-88c2d0e11a28
+			defaultHierarchy: LocalDateTable_b6859bf1-4328-43c4-ab85-de12aa9e80e1.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column DATE_CERTAINTY
+		dataType: string
+		lineageTag: 4dd265a3-745d-4df8-9023-0956144681d5
+		summarizeBy: none
+		sourceColumn: DATE_CERTAINTY
+
+		annotation SummarizationSetBy = Automatic
+
+	column PLANNED_YEAR
+		dataType: double
+		lineageTag: aeb05c0a-1d96-440d-9a43-83f2f8ef4f05
+		summarizeBy: sum
+		sourceColumn: PLANNED_YEAR
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column NOTES
+		dataType: string
+		lineageTag: 4e48814c-2b5f-45d7-8ac9-ac1a200dacde
+		summarizeBy: none
+		sourceColumn: NOTES
+
+		annotation SummarizationSetBy = Automatic
+
+	column DQ_ISSUE_COUNT
+		dataType: double
+		lineageTag: a815becd-5849-42b9-808d-ade4102f2447
+		summarizeBy: sum
+		sourceColumn: DQ_ISSUE_COUNT
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition FACT_ROW_PLAN = m
+		mode: import
+		source =
+				let
+				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
+				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
+				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
+				    FACT_ROW_PLAN_View = ANALYTICS_Schema{[Name="FACT_ROW_PLAN",Kind="View"]}[Data]
+				in
+				    FACT_ROW_PLAN_View
+
+	annotation PBI_ResultType = Table
+
