@@ -1,0 +1,18 @@
+expression Snowflake_Server =
+		let
+		    Source = "BKNMMVM-XEB70822.snowflakecomputing.com" meta [IsParameterQuery = true, IsParameterQueryRequired = false, Type = type any]
+		in
+		    Source
+	lineageTag: 1ca3b064-e4ce-4090-8229-baf2ea6ac6ef
+
+	annotation PBI_ResultType = Text
+
+expression WH =
+		let
+		    Source = "WH_REPORTING_XS" meta [IsParameterQuery = true, IsParameterQueryRequired = false, Type = type any]
+		in
+		    Source
+	lineageTag: 47c130e0-d9f0-4ea7-8114-aaccd5650af9
+
+	annotation PBI_ResultType = Text
+

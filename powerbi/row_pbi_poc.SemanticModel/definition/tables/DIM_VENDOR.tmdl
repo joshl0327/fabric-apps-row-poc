@@ -1,0 +1,42 @@
+table DIM_VENDOR
+	lineageTag: bad21db8-e654-4995-a44f-b228ac61e0c9
+
+	column VENDOR_ID
+		dataType: double
+		lineageTag: 55fdee67-bf4d-465b-993a-d8b83ef74b3a
+		summarizeBy: none
+		sourceColumn: VENDOR_ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column VENDOR_NAME
+		dataType: string
+		lineageTag: d7d6df0e-1bbf-44ce-b3f1-bd7d0a200a93
+		summarizeBy: none
+		sourceColumn: VENDOR_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	column VENDOR_TYPE
+		dataType: string
+		lineageTag: 29e5d6c3-a0c7-4c85-8aed-1b3f90718db2
+		summarizeBy: none
+		sourceColumn: VENDOR_TYPE
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DIM_VENDOR = m
+		mode: import
+		source =
+				let
+				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
+				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
+				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
+				    DIM_VENDOR_View = ANALYTICS_Schema{[Name="DIM_VENDOR",Kind="View"]}[Data]
+				in
+				    DIM_VENDOR_View
+
+	annotation PBI_ResultType = Table
+
