@@ -21,7 +21,7 @@ Snowflake (`ROW_DB.STAGING`). The rules live in SQL
 | **Vendor name variant** | Normalize (case, spaces, punctuation, `&`↔`and`, drop `Inc`/`LLC`, expand `Veg`/`Mgmt`/`Svc`), then allow a close match for small typos; map to the one canonical name. | `Summit Veg Mgmt`, `summit vegetation management LLC`, `Summit Vegitation Mgmt` → `Summit Vegetation Management` |
 | **Vendor by role** | A crew referred to by its type maps to that vendor. | `In-House Crew` → `North District Line Crew` |
 | **Vendor we can't match** | Left null and sent to review (never guessed). | *(unrecognized)* → review |
-| **Blank vendor** | Left empty. | *(blank)* → *(empty)* |
+| **Blank vendor** | Left empty in STAGING and logged as a data quality issue. (The ANALYTICS `DIM_VENDOR` later labels these feeders "Unassigned" for the report — see `docs/data-model.md`.) | *(blank)* → *(empty)* → report shows **Unassigned** |
 
 **Date certainty** is one of: `confirmed` (a real date), `tentative` (a date or
 year we're not sure of), `next year`, or `TBD` (unknown).
