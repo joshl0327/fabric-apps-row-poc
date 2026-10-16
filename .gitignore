@@ -25,6 +25,8 @@ data/out/
 *.pbix
 **/.pbi/localSettings.json
 **/.pbi/cache.abf
+review/screenshots/
+docs/ai-governance-options.md
 
 # --- OS / editor ---
 .DS_Store
