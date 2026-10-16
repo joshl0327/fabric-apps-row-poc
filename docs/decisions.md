@@ -75,3 +75,77 @@ Compared against the expected answers in AGENTS.md.
   that said it was created one-to-one both directions; the live model is
   already correct, so the known gap is resolved and no change is needed. Worth
   updating the AGENTS.md note to match.
+
+## Assumed during R2–R4 (to review)
+
+Choices the agent made where the inputs were ambiguous, per prompt 05. Review
+and confirm or correct.
+
+- **Measure display folders follow `docs/report-requirements.md` exactly.** The
+  two foundational measures (`Feeders in Plan`, `Line Miles in Plan`) are placed
+  in `10 - Plan` as that table specifies; `00 - Base` keeps only the
+  `Ex_Measure` placeholder. AGENTS.md's "base measures first (00 - Base)" is
+  treated as build-order guidance, not a folder override. (R2)
+- **`Line Miles by Vendor` is an explicit alias measure** (`= [Line Miles in Plan]`)
+  rather than a re-implementation, so prompt 05's "build every measure in
+  report-requirements" is satisfied while the logic stays written once. It is
+  the same value as Line Miles in Plan and splits by the vendor on a visual. (R2)
+- **`Feeders Due Soon` applies only the 0–90-day date-window filter**, no
+  certainty filter, following the explicit decision in prompt 05. (In this data
+  every feeder with a next-clearing date is confirmed/tentative, so the result
+  is unaffected.) (R2)
+- **`Feeders Next Year` and `Feeders Not Cleared 5+ Years` return BLANK** (0
+  feeders) in the synthetic data. Left without a `+ 0` wrapper so they stay
+  correct under slicing; a KPI card will show blank/0. (R2)
+- **Divisors:** `Avg Years Since Last Clearing` divides day-diff by `365.25`;
+  `Feeders Not Cleared 5+ Years` uses `EDATE(TODAY(), -60)` (5 years) as the
+  cutoff. (R2)
+- **Two report-support helper measures added** in `90 - Helpers`, visible (not
+  hidden) because they are surfaced in visuals: `Clearing Status` (status text
+  for the Clearing Plan table) and `Feeder Detail Title` (dynamic drillthrough
+  title). AGENTS.md reserves `90 - Helpers` for "hidden helpers only"; these are
+  display helpers kept visible for transparency. Validated in
+  `tests/dax/10_measures.dax`. (R4)
+- **Orphan DQ feeders inject a blank `DIM_CIRCUIT` member.** The 2 orphan
+  feeders in `FACT_DQ_ISSUE` don't match a circuit, so the
+  `FACT_DQ_ISSUE → DIM_CIRCUIT` relationship adds a blank virtual row to
+  `DIM_CIRCUIT`; `VALUES(DIM_CIRCUIT[FEEDER_ID])` returns 154. `Clearing Status`
+  returns BLANK for feeders with no plan row so the phantom is dropped; report
+  tables built on `DIM_CIRCUIT` get a visual-level filter to the same effect.
+  (R4)
+
+## Independent review pass (R4, 2026-10-16)
+
+`pbi-report-reviewer` subagent reviewed the six-page draft against the spec, the
+BrilliT standards and AGENTS.md. Triage:
+
+**Fixed (agent):**
+- **Alt text** added to every data visual (cards, charts, tables) via
+  `visualContainerObjects.general.altText` — closes the accessibility blocker.
+- **Raw field-name chart subtitles** removed (auto `subTitle` turned off on all
+  charts) so no `DATE_CERTAINTY` / `DISTRICT_NAME` / `VENDOR_NAME` tokens show.
+- **About glossary** rounded out to all 15 measures (matches `docs/measures.md`).
+
+**Accepted / clarified (not a defect):**
+- **ALL-CAPS table headers** (FEEDER_ID, RAW_VALUE, …) are the model column
+  names, kept deliberately per the 2026-10-15 decision "table and column names
+  stay as they are; PBIR binds by name." Friendly per-column display names are a
+  developer polish option (would mean renaming model columns).
+- **KPI card green accent bar** is the BrilliT house standard for *every* KPI
+  card (brand accent, decorative) — not a semantic good/bad signal, so Overdue
+  cards carrying it is by design, not an error.
+- **"(Blank)" vendor / vendor-type categories** are 4 real feeders with no
+  assigned vendor — a legitimate signal for the veg-management lead, not missing
+  data. Developer may filter or relabel "Unassigned" later.
+
+**Deferred to the Power BI developer (recorded, not fixed in v1):**
+- Hard-coded brand hex in PBIR → move color governance into the theme
+  `visualStyles` so a brand swap is a theme rebuild (risk of appearance
+  regression made this unsuitable right before handoff).
+- `Clearing Status` cell: single-cell background + icon (text status is shipped
+  and is accessible; background/icon need a color-returning measure + table
+  conditional formatting).
+- Dynamic drillthrough title, Overdue/Due-soon bookmark toggle, report-page
+  tooltip, measure-driven subtitle — the approved deviations.
+- Re-capture at exact 1920×1080 to rule out off-canvas placement (the empty band
+  above/below content in the captures is a screenshot-height artifact).
