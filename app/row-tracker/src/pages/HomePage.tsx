@@ -14,6 +14,7 @@ import {
   seedFabric,
   updateClearingPlan,
 } from '@/services/clearingPlans';
+import { toUserMessage } from '@/services/errors';
 import { isLocalBackend } from '@/services/rayfinClient';
 import {
   hasErrors,
@@ -61,7 +62,7 @@ export function HomePage() {
       await seedFabric(user?.email ?? user?.id ?? 'unknown');
       await fetchRows();
     } catch (err) {
-      setSeedError(err instanceof Error ? err.message : 'Failed to load data.');
+      setSeedError(toUserMessage(err, 'Failed to load data.'));
     } finally {
       setSeeding(false);
     }
@@ -231,7 +232,7 @@ function EditForm({
       await updateClearingPlan(row.id, edit, updatedBy);
       await onSaved();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save.');
+      setSaveError(toUserMessage(err, 'Failed to save.'));
     } finally {
       setSaving(false);
     }
