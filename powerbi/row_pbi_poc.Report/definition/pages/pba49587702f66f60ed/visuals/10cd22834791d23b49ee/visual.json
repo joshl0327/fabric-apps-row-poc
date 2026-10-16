@@ -1,12 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "10cd22834791d23b49ee",
   "position": {
     "x": 1588,
     "y": 70,
     "z": 1260,
-    "width": 188,
     "height": 76,
+    "width": 188,
     "tabOrder": 1260
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "DIM_DATE_CERTAINTY.DATE_CERTAINTY",
-              "nativeQueryRef": "DATE_CERTAINTY"
+              "nativeQueryRef": "DATE_CERTAINTY",
+              "active": true
             }
           ]
         }

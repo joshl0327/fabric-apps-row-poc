@@ -1,12 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "b14e2842ba7fb474d77d",
   "position": {
     "x": 972,
     "y": 284,
     "z": 1460,
-    "width": 916,
     "height": 370,
+    "width": 916,
     "tabOrder": 1460
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "DIM_VENDOR.VENDOR_TYPE",
-              "nativeQueryRef": "VENDOR_TYPE"
+              "nativeQueryRef": "VENDOR_TYPE",
+              "active": true
             }
           ]
         },
