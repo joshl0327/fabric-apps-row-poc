@@ -1,0 +1,402 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "b65a2412893d23eaa5aa",
+  "position": {
+    "x": 32,
+    "y": 176,
+    "z": 1810,
+    "width": 1500,
+    "height": 860,
+    "tabOrder": 1810
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "ROW Clearing Plan — right-of-way (vegetation) clearing tracker (synthetic data).",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Audience: vegetation management lead, district managers, operations leadership.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Purpose: which feeders are overdue or due soon and who owns them; how firm the plan is; where the source spreadsheet was unreliable.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Measures (see docs/measures.md):",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Feeders in Plan — distinct feeders with a plan row.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Line Miles in Plan — line miles of plan feeders, each counted once.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• % Plan Date Confirmed — confirmed-certainty feeders ÷ Feeders in Plan.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Feeders Next Year / Feeders TBD — feeders by those certainties.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Feeders Overdue — confirmed/tentative feeders with a next date before today.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Line Miles Overdue — line miles on overdue feeders.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Feeders Due Soon — next date within 90 days.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Avg Years Since Last Clearing — mean years since last cleared (blanks excluded).",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Feeders Not Cleared 5+ Years — last cleared more than 5 years ago.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Line Miles by Vendor — line miles in plan, split by vendor.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• DQ Issues — data-quality problems caught (69, incl. 2 orphans).",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Feeders with DQ Issues / % Feeders with DQ Issues — affected in-plan feeders.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "• Orphans to Review — spreadsheet feeders with no matching circuit (2).",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "“Today” is TODAY(). Data source: Snowflake ROW_DB.ANALYTICS (Import). Refresh: manual (static synthetic data for the POC).",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Contact: BI team. Standards: brillit-report-standards v0.2.",
+                    "textStyle": {
+                      "fontFamily": "Arial",
+                      "fontSize": "13px",
+                      "color": "#202124"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#ffffff'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#d9dde3'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "16D"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "16D"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "20D"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "20D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

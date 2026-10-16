@@ -1,0 +1,286 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "67573075d4fdd73e84a7",
+  "position": {
+    "x": 32,
+    "y": 284,
+    "z": 1730,
+    "width": 916,
+    "height": 764,
+    "tabOrder": 1730
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_CIRCUIT"
+                    }
+                  },
+                  "Property": "CIRCUIT_NAME"
+                }
+              },
+              "queryRef": "DIM_CIRCUIT.CIRCUIT_NAME",
+              "nativeQueryRef": "CIRCUIT_NAME"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_CIRCUIT"
+                    }
+                  },
+                  "Property": "SUBSTATION_NAME"
+                }
+              },
+              "queryRef": "DIM_CIRCUIT.SUBSTATION_NAME",
+              "nativeQueryRef": "SUBSTATION_NAME"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_DISTRICT"
+                    }
+                  },
+                  "Property": "DISTRICT_NAME"
+                }
+              },
+              "queryRef": "DIM_DISTRICT.DISTRICT_NAME",
+              "nativeQueryRef": "DISTRICT_NAME"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_VENDOR"
+                    }
+                  },
+                  "Property": "VENDOR_NAME"
+                }
+              },
+              "queryRef": "DIM_VENDOR.VENDOR_NAME",
+              "nativeQueryRef": "VENDOR_NAME"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "PLANNED_YEAR"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.PLANNED_YEAR",
+              "nativeQueryRef": "PLANNED_YEAR"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "LAST_CLEARED_DATE"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.LAST_CLEARED_DATE",
+              "nativeQueryRef": "LAST_CLEARED_DATE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "NEXT_CLEARING_DATE"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.NEXT_CLEARING_DATE",
+              "nativeQueryRef": "NEXT_CLEARING_DATE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_DATE_CERTAINTY"
+                    }
+                  },
+                  "Property": "DATE_CERTAINTY"
+                }
+              },
+              "queryRef": "DIM_DATE_CERTAINTY.DATE_CERTAINTY",
+              "nativeQueryRef": "DATE_CERTAINTY"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "LAST_WORK_DONE"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.LAST_WORK_DONE",
+              "nativeQueryRef": "LAST_WORK_DONE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "NOTES"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.NOTES",
+              "nativeQueryRef": "NOTES"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'growToFit'"
+                }
+              }
+            },
+            "autoSizeColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#ffffff'"
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#002f6e'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "stylePreset": [
+        {
+          "properties": {
+            "name": {
+              "expr": {
+                "Literal": {
+                  "Value": "'None'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Feeder details'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#193768'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Feeder details (table).'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

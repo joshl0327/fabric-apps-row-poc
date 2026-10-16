@@ -1,0 +1,216 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "9739a64c89082f8b9e84",
+  "position": {
+    "x": 32,
+    "y": 668,
+    "z": 1640,
+    "width": 1856,
+    "height": 380,
+    "tabOrder": 1640
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "FEEDER_ID"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.FEEDER_ID",
+              "nativeQueryRef": "FEEDER_ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "ISSUE_TYPE"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.ISSUE_TYPE",
+              "nativeQueryRef": "ISSUE_TYPE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "SOURCE_COLUMN"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.SOURCE_COLUMN",
+              "nativeQueryRef": "SOURCE_COLUMN"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "RAW_VALUE"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.RAW_VALUE",
+              "nativeQueryRef": "RAW_VALUE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "CLEAN_VALUE"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.CLEAN_VALUE",
+              "nativeQueryRef": "CLEAN_VALUE"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'growToFit'"
+                }
+              }
+            },
+            "autoSizeColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#ffffff'"
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#002f6e'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "stylePreset": [
+        {
+          "properties": {
+            "name": {
+              "expr": {
+                "Literal": {
+                  "Value": "'None'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Raw vs clean values'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#193768'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Raw vs clean values (table).'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

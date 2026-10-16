@@ -11,13 +11,13 @@
       "type": "SharedResources"
     },
     "customTheme": {
-      "name": "Frontier",
+      "name": "BrilliT-da2828ff.json",
       "reportVersionAtImport": {
         "visual": "2.13.0",
         "report": "3.4.0",
         "page": "2.3.1"
       },
-      "type": "SharedResources"
+      "type": "RegisteredResources"
     }
   },
   "objects": {
@@ -57,11 +57,22 @@
           "name": "Fluent2-CY26SU09",
           "path": "BaseThemes/Fluent2-CY26SU09.json",
           "type": "BaseTheme"
+        }
+      ]
+    },
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "BrilliT-da2828ff.json",
+          "path": "BrilliT-da2828ff.json",
+          "type": "CustomTheme"
         },
         {
-          "name": "Frontier",
-          "path": "BuiltInThemes/Frontier.json",
-          "type": "CustomTheme"
+          "name": "brillit-logo.png",
+          "path": "brillit-logo.png",
+          "type": "Image"
         }
       ]
     }
