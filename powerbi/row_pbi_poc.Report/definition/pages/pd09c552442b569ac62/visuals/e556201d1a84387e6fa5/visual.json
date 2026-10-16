@@ -1,12 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "e556201d1a84387e6fa5",
   "position": {
     "x": 32,
     "y": 284,
     "z": 1140,
-    "width": 1070,
     "height": 764,
+    "width": 1070,
     "tabOrder": 1140
   },
   "visual": {
@@ -27,25 +27,8 @@
                 }
               },
               "queryRef": "DIM_DATE.Month Year",
-              "nativeQueryRef": "Month Year"
-            }
-          ]
-        },
-        "Y": {
-          "projections": [
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "@Measures"
-                    }
-                  },
-                  "Property": "Feeders in Plan"
-                }
-              },
-              "queryRef": "@Measures.Feeders in Plan",
-              "nativeQueryRef": "Feeders in Plan"
+              "nativeQueryRef": "Month Year",
+              "active": true
             }
           ]
         },
@@ -64,6 +47,24 @@
               },
               "queryRef": "DIM_DATE_CERTAINTY.DATE_CERTAINTY",
               "nativeQueryRef": "DATE_CERTAINTY"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "@Measures"
+                    }
+                  },
+                  "Property": "Feeders in Plan"
+                }
+              },
+              "queryRef": "@Measures.Feeders in Plan",
+              "nativeQueryRef": "Feeders in Plan"
             }
           ]
         }

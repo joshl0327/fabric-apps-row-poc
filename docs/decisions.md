@@ -26,6 +26,7 @@ reviewing the draft reads this first. Newest at the bottom.
 | 2026-10-15 | Column conventions applied: hid fact keys (`FACT_ROW_PLAN` FEEDER_ID/VENDOR_ID/DATE_CERTAINTY, `FACT_DQ_ISSUE` FEEDER_ID); `SummarizeBy = None` on PLANNED_YEAR, CIRCUIT_NUM, SUBSTATION_NUM; `DATE_CERTAINTY` sorts by `SORT_ORDER`. | AGENTS.md model conventions | Josh | Whole model |
 | 2026-10-15 | Changed relationship-key and year columns from `Double` to `Int64` (TOM data type only, no Power Query step): `VENDOR_ID` (FACT_ROW_PLAN + DIM_VENDOR), `RESPONSIBLE_DISTRICT_ID` (DIM_CIRCUIT), `DISTRICT_ID` (DIM_DISTRICT), `PLANNED_YEAR` (FACT_ROW_PLAN). Both sides of each relationship changed together. | BPA items 1–2: integer keys compress/join better; a year is a whole number | Josh | Model performance |
 | 2026-10-15 | BPA item 4 (`DIM_DATE[Date]` date type): no change needed. TOM has no date-only data type; the column is `DateTime` with a date-only format (`Long Date`), which Power BI Desktop already classifies as Date. | TOM limitation | Josh | DIM_DATE |
+| 2026-10-16 | From v1 on, Power BI Desktop is the source of truth for the report; `powerbi/build-report.mjs` is kept as a record of how the agent built v1 and is not rerun | Desktop saves rewrite page and visual IDs, so the generator and the report drift apart after any manual edit | Josh | Report maintenance |
 
 ## R1 profile findings (2026-10-15)
 

@@ -1,12 +1,12 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "262dfaf8b92e2bef46c2",
   "position": {
     "x": 972,
     "y": 284,
     "z": 1630,
-    "width": 916,
     "height": 360,
+    "width": 916,
     "tabOrder": 1630
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "FACT_DQ_ISSUE.SOURCE_COLUMN",
-              "nativeQueryRef": "SOURCE_COLUMN"
+              "nativeQueryRef": "SOURCE_COLUMN",
+              "active": true
             }
           ]
         },
