@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import itertools
 import random
 from pathlib import Path
 
@@ -348,6 +349,15 @@ def damage(real_rows, rng: random.Random, as_of: dt.date):
     year = as_of.year + 1
     pool = nondate_pool(year)
 
+    # Assign the non-date text values by cycling through every pattern in `pool`
+    # rather than drawing them at random, so each pattern appears at least once.
+    # Next Clearing is damaged first and takes the first 9 cycle items, which
+    # covers all 7 distinct patterns (the earlier random draw left "Next Year"
+    # and the "<date> - TBD" shape never appearing for Next Clearing). The main
+    # `rng` stream is left untouched — each iteration still spends one
+    # `rng.choice(pool)` draw — so every other value in the dataset is identical.
+    nondate_cycle = itertools.cycle(pool)
+
     def sample(n):
         return rng.sample(real_rows, n)
 
@@ -369,7 +379,8 @@ def damage(real_rows, rng: random.Random, as_of: dt.date):
         chosen = sample(n_nondate + n_datefmt + n_blank)
         i = 0
         for row in chosen[:n_nondate]:
-            raw, certainty, planned = rng.choice(pool)
+            rng.choice(pool)  # spend the draw so the main rng stream is unchanged
+            raw, certainty, planned = next(nondate_cycle)
             row[col_key] = raw
             answer.append({
                 "_row": row, "column": col_label,
@@ -431,6 +442,22 @@ def damage(real_rows, rng: random.Random, as_of: dt.date):
     return answer
 
 
+def age_last_cleared(real_rows, rng: random.Random, as_of: dt.date,
+                     n_min: int = 3, n_max: int = 5):
+    """Push a few feeders' true last-cleared date to 6-8 years before as-of, so
+    the "Feeders Not Cleared 5+ Years" measure has something to report.
+
+    Uses its own `rng` (never the main stream), so the rest of the dataset stays
+    byte-for-byte identical. Only rows whose last_cleared is still a real date
+    are eligible — rows whose Last Cleared cell was damaged to text or blank keep
+    that damage, and their answer-key dates stay correct.
+    """
+    eligible = [r for r in real_rows if isinstance(r["last_cleared"], dt.date)]
+    n = rng.randint(n_min, n_max)
+    for row in rng.sample(eligible, n):
+        row["last_cleared"] = as_of - dt.timedelta(days=rng.randint(6 * 365, 8 * 365))
+
+
 # --------------------------------------------------------------------------
 # Writers
 # --------------------------------------------------------------------------
@@ -486,9 +513,12 @@ def main() -> None:
     pd.DataFrame(circuits, columns=circuit_cols) \
         .to_csv(out / "circuits.csv", index=False)
 
-    # Clearing plan: truth -> damage -> assemble -> write
+    # Clearing plan: truth -> damage -> age a few -> assemble -> write
     real_rows = build_plan_truth(circuits, rng, as_of)
     answer = damage(real_rows, rng, as_of)
+    # A few feeders last cleared 6-8 years ago. Own rng (seed-derived) so nothing
+    # else in the dataset shifts.
+    age_last_cleared(real_rows, random.Random(args.seed + 1000), as_of)
     rows, extra_answer = assemble_rows(real_rows, used_subs, sub_pool, rng, as_of)
     answer += extra_answer
 

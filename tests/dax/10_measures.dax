@@ -27,11 +27,12 @@ EVALUATE ROW ( "% Plan Date Confirmed", [% Plan Date Confirmed] )
 
 // Feeders Next Year — certainty "next year".
 EVALUATE ROW ( "Feeders Next Year", [Feeders Next Year] )
-// RESULT: (blank) = 0 feeders — no "next year" rows in the synthetic data (R1).
+// RESULT: 2  (the generator now cycles every Next Clearing text pattern, so
+// "Next Year" appears; 2 feeders carry it).
 
 // Feeders TBD — certainty "TBD".
 EVALUATE ROW ( "Feeders TBD", [Feeders TBD] )
-// RESULT: 7
+// RESULT: 5  (was 7; 2 feeders moved from TBD to "next year")
 
 // ---------------------------------------------------------------------------
 // 20 - Clearing Cycle
@@ -52,11 +53,12 @@ EVALUATE ROW ( "Feeders Due Soon", [Feeders Due Soon] )
 // Avg Years Since Last Clearing — mean years from LAST_CLEARED_DATE to today,
 // blanks excluded.
 EVALUATE ROW ( "Avg Years Since Last Clearing", [Avg Years Since Last Clearing] )
-// RESULT: 2.07  (as of 2026-10-16)
+// RESULT: 2.16  (as of 2026-10-16; up from 2.07 now that 3 feeders were last
+// cleared 6-8 years ago)
 
 // Feeders Not Cleared 5+ Years — LAST_CLEARED_DATE more than 5 years ago.
 EVALUATE ROW ( "Feeders Not Cleared 5+ Years", [Feeders Not Cleared 5+ Years] )
-// RESULT: (blank) = 0 feeders — none cleared >5 years ago in the synthetic data.
+// RESULT: 3  (the generator now ages a few feeders to 6-8 years before as-of).
 
 // ---------------------------------------------------------------------------
 // 30 - Vendors
@@ -70,8 +72,8 @@ SUMMARIZECOLUMNS (
     "Line Miles by Vendor", [Line Miles by Vendor]
 )
 ORDER BY [Line Miles by Vendor] DESC
-// RESULT: splits across vendors; the column total reconciles to 4634.7
-// (= Line Miles in Plan). Verified it responds to the vendor grouping.
+// RESULT: 7 rows incl. "Unassigned" (168.1); the column total reconciles to
+// 4634.7 (= Line Miles in Plan). Verified it responds to the vendor grouping.
 
 // ---------------------------------------------------------------------------
 // 40 - Data Quality
@@ -100,11 +102,13 @@ EVALUATE
 ROW (
     "Feeders in Plan (=153)", [Feeders in Plan],
     "Certainty total (=153)", CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] IN { "confirmed", "tentative", "next year", "TBD" } ),
-    "Feeders with next date (=142)", CALCULATE ( [Feeders in Plan], NOT ISBLANK ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ) ),
-    "Overdue + Due Soon (<=142)", [Feeders Overdue] + [Feeders Due Soon]
+    "Feeders with next date (=143)", CALCULATE ( [Feeders in Plan], NOT ISBLANK ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ) ),
+    "Overdue + Due Soon (<=143)", [Feeders Overdue] + [Feeders Due Soon]
 )
-// RESULT: 153, 153, 142, 24 — all checks pass (confirmed 142 + tentative 4
-// + next year 0 + TBD 7 = 153; 24 <= 142).
+// RESULT: 153, 153, 143, 24 — all checks pass (confirmed 142 + tentative 4
+// + next year 2 + TBD 5 = 153; 24 <= 143). Feeders with a next date is 143
+// (was 142): the "10/20/<year> - TBD" pattern now appears in Next Clearing and
+// recovers one tentative date.
 
 // ---------------------------------------------------------------------------
 // 90 - Helpers (report-support measures added in R4/Part C)
@@ -119,9 +123,10 @@ DEFINE
 EVALUATE
     GROUPBY ( _perFeeder, [Status], "Feeders", COUNTX ( CURRENTGROUP (), 1 ) )
 ORDER BY [Feeders] DESC
-// RESULT: Scheduled 118, Overdue 14, No date 11, Due soon 10 — total 153.
+// RESULT: Scheduled 119, Overdue 14, Due soon 10, No date 10 — total 153.
 // Overdue = Feeders Overdue (14); Due soon = Feeders Due Soon (10);
-// No date = feeders with blank NEXT_CLEARING_DATE (11, per R1).
+// No date = feeders with blank NEXT_CLEARING_DATE (10; was 11 before the
+// "10/20/<year> - TBD" pattern recovered one date).
 
 // Feeder Detail Title — dynamic drillthrough page title.
 EVALUATE ROW ( "Title (no selection)", [Feeder Detail Title] )

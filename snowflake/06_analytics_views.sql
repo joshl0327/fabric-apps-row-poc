@@ -51,15 +51,21 @@ SELECT
 FROM ROW_DB.STAGING.STG_DISTRICTS;
 
 -- ---------------------------------------------------------------------
--- DIM_VENDOR: the canonical vendor list (canonical names + vendor type).
--- Grain: one row per vendor_id (6).
+-- DIM_VENDOR: the canonical vendor list (canonical names + vendor type), plus
+-- an "Unassigned" member (vendor_id 0) so feeders with no vendor read as
+-- "Unassigned" on the report instead of (Blank). The blank is still logged as a
+-- data quality issue in STAGING; this is a report-facing label decided here, so
+-- the business logic lives in Snowflake, not in a visual.
+-- Grain: one row per vendor_id (7: 6 canonical + Unassigned).
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW ROW_DB.ANALYTICS.DIM_VENDOR AS
 SELECT
   vendor_id,
   vendor_name,
   vendor_type
-FROM ROW_DB.STAGING.STG_VENDORS;
+FROM ROW_DB.STAGING.STG_VENDORS
+UNION ALL
+SELECT 0 AS vendor_id, 'Unassigned' AS vendor_name, 'unassigned' AS vendor_type;
 
 -- ---------------------------------------------------------------------
 -- DIM_DATE_CERTAINTY: the four certainty values a cleaned date can carry,
@@ -97,7 +103,7 @@ WITH issue_counts AS (
 )
 SELECT
   p.feeder_id,
-  v.vendor_id,
+  COALESCE(v.vendor_id, 0)       AS vendor_id,   -- no vendor -> Unassigned (0)
   p.last_cleared_date,
   p.last_work_done,
   p.next_clearing_date,
@@ -142,7 +148,7 @@ USE WAREHOUSE WH_REPORTING_XS;
 -- Row count of every ANALYTICS view, with the expected count beside it.
 SELECT 'DIM_CIRCUIT'        AS view_name, COUNT(*) AS row_count, 153 AS expected FROM ROW_DB.ANALYTICS.DIM_CIRCUIT
 UNION ALL SELECT 'DIM_DISTRICT',       COUNT(*),   5 FROM ROW_DB.ANALYTICS.DIM_DISTRICT
-UNION ALL SELECT 'DIM_VENDOR',         COUNT(*),   6 FROM ROW_DB.ANALYTICS.DIM_VENDOR
+UNION ALL SELECT 'DIM_VENDOR',         COUNT(*),   7 FROM ROW_DB.ANALYTICS.DIM_VENDOR
 UNION ALL SELECT 'DIM_DATE_CERTAINTY', COUNT(*),   4 FROM ROW_DB.ANALYTICS.DIM_DATE_CERTAINTY
 UNION ALL SELECT 'FACT_ROW_PLAN',      COUNT(*), 153 FROM ROW_DB.ANALYTICS.FACT_ROW_PLAN
 UNION ALL SELECT 'FACT_DQ_ISSUE',      COUNT(*),  69 FROM ROW_DB.ANALYTICS.FACT_DQ_ISSUE

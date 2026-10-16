@@ -96,9 +96,10 @@ table FACT_ROW_PLAN
 				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
 				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
 				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
-				    FACT_ROW_PLAN_View = ANALYTICS_Schema{[Name="FACT_ROW_PLAN",Kind="View"]}[Data]
+				    FACT_ROW_PLAN_View = ANALYTICS_Schema{[Name="FACT_ROW_PLAN",Kind="View"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(FACT_ROW_PLAN_View,{{"VENDOR_ID", Int64.Type}, {"PLANNED_YEAR", Int64.Type}})
 				in
-				    FACT_ROW_PLAN_View
+				    #"Changed Type"
 
 	annotation PBI_ResultType = Table
 

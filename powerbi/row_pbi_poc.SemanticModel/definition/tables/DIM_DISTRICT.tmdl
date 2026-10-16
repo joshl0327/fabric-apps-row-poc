@@ -27,9 +27,10 @@ table DIM_DISTRICT
 				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
 				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
 				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
-				    DIM_DISTRICT_View = ANALYTICS_Schema{[Name="DIM_DISTRICT",Kind="View"]}[Data]
+				    DIM_DISTRICT_View = ANALYTICS_Schema{[Name="DIM_DISTRICT",Kind="View"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(DIM_DISTRICT_View,{{"DISTRICT_ID", Int64.Type}})
 				in
-				    DIM_DISTRICT_View
+				    #"Changed Type"
 
 	annotation PBI_ResultType = Table
 

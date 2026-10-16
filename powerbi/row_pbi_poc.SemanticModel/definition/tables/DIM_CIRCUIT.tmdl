@@ -82,9 +82,10 @@ table DIM_CIRCUIT
 				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
 				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
 				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
-				    DIM_CIRCUIT_View = ANALYTICS_Schema{[Name="DIM_CIRCUIT",Kind="View"]}[Data]
+				    DIM_CIRCUIT_View = ANALYTICS_Schema{[Name="DIM_CIRCUIT",Kind="View"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(DIM_CIRCUIT_View,{{"RESPONSIBLE_DISTRICT_ID", Int64.Type}})
 				in
-				    DIM_CIRCUIT_View
+				    #"Changed Type"
 
 	annotation PBI_ResultType = Table
 

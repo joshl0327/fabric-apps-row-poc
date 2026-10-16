@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "DIM_CIRCUIT.FEEDER_ID",
-              "nativeQueryRef": "FEEDER_ID"
+              "nativeQueryRef": "FEEDER_ID",
+              "displayName": "Feeder"
             },
             {
               "field": {
@@ -41,7 +42,8 @@
                 }
               },
               "queryRef": "DIM_CIRCUIT.CIRCUIT_NAME",
-              "nativeQueryRef": "CIRCUIT_NAME"
+              "nativeQueryRef": "CIRCUIT_NAME",
+              "displayName": "Circuit"
             },
             {
               "field": {
@@ -55,7 +57,8 @@
                 }
               },
               "queryRef": "DIM_DISTRICT.DISTRICT_NAME",
-              "nativeQueryRef": "DISTRICT_NAME"
+              "nativeQueryRef": "DISTRICT_NAME",
+              "displayName": "District"
             },
             {
               "field": {
@@ -69,7 +72,8 @@
                 }
               },
               "queryRef": "DIM_VENDOR.VENDOR_NAME",
-              "nativeQueryRef": "VENDOR_NAME"
+              "nativeQueryRef": "VENDOR_NAME",
+              "displayName": "Vendor"
             },
             {
               "field": {
@@ -83,7 +87,8 @@
                 }
               },
               "queryRef": "FACT_ROW_PLAN.LAST_CLEARED_DATE",
-              "nativeQueryRef": "LAST_CLEARED_DATE"
+              "nativeQueryRef": "LAST_CLEARED_DATE",
+              "displayName": "Last cleared"
             },
             {
               "field": {
@@ -97,7 +102,8 @@
                 }
               },
               "queryRef": "FACT_ROW_PLAN.NEXT_CLEARING_DATE",
-              "nativeQueryRef": "NEXT_CLEARING_DATE"
+              "nativeQueryRef": "NEXT_CLEARING_DATE",
+              "displayName": "Next clearing"
             },
             {
               "field": {
@@ -111,7 +117,8 @@
                 }
               },
               "queryRef": "DIM_DATE_CERTAINTY.DATE_CERTAINTY",
-              "nativeQueryRef": "DATE_CERTAINTY"
+              "nativeQueryRef": "DATE_CERTAINTY",
+              "displayName": "Date certainty"
             },
             {
               "field": {
@@ -139,7 +146,8 @@
                 }
               },
               "queryRef": "FACT_ROW_PLAN.NOTES",
-              "nativeQueryRef": "NOTES"
+              "nativeQueryRef": "NOTES",
+              "displayName": "Notes"
             }
           ]
         }
