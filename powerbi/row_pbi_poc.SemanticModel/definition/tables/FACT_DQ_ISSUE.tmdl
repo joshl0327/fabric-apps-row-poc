@@ -3,6 +3,7 @@ table FACT_DQ_ISSUE
 
 	column FEEDER_ID
 		dataType: string
+		isHidden
 		lineageTag: 3fdc2853-1f86-406e-b1ab-58a8674a4e91
 		summarizeBy: none
 		sourceColumn: FEEDER_ID

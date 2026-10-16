@@ -1,0 +1,68 @@
+/// Date dimension covering LAST_CLEARED_DATE and NEXT_CLEARING_DATE. Generated with CALENDAR over the full span of both columns. Active relationship to NEXT_CLEARING_DATE; inactive to LAST_CLEARED_DATE.
+table DIM_DATE
+	lineageTag: eb043c7b-03a4-4258-8e09-86c1f79321b3
+	dataCategory: Time
+
+	column Date
+		isUnique
+		formatString: Long Date
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+	column Year
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year]
+
+	column 'Month Number'
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month Number]
+
+	column Month
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month]
+		sortByColumn: 'Month Number'
+
+	column 'Month Year'
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month Year]
+		sortByColumn: 'Year Month Sort'
+
+	column Quarter
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Quarter]
+
+	column 'Year Month Sort'
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year Month Sort]
+
+	partition DIM_DATE = calculated
+		mode: import
+		source =
+				VAR _minNext = CALCULATE ( MIN ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ) )
+				VAR _minLast = CALCULATE ( MIN ( FACT_ROW_PLAN[LAST_CLEARED_DATE] ) )
+				VAR _maxNext = CALCULATE ( MAX ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ) )
+				VAR _maxLast = CALCULATE ( MAX ( FACT_ROW_PLAN[LAST_CLEARED_DATE] ) )
+				VAR _min = MINX ( { _minNext, _minLast }, [Value] )
+				VAR _max = MAXX ( { _maxNext, _maxLast }, [Value] )
+				VAR _start = DATE ( YEAR ( _min ), 1, 1 )
+				VAR _end = DATE ( YEAR ( _max ), 12, 31 )
+				RETURN
+				ADDCOLUMNS (
+				    CALENDAR ( _start, _end ),
+				    "Year", YEAR ( [Date] ),
+				    "Month Number", MONTH ( [Date] ),
+				    "Month", FORMAT ( [Date], "mmm" ),
+				    "Month Year", FORMAT ( [Date], "mmm yyyy" ),
+				    "Quarter", "Q" & FORMAT ( [Date], "Q" ),
+				    "Year Month Sort", YEAR ( [Date] ) * 100 + MONTH ( [Date] )
+				)
+

@@ -2,7 +2,7 @@ table DIM_VENDOR
 	lineageTag: bad21db8-e654-4995-a44f-b228ac61e0c9
 
 	column VENDOR_ID
-		dataType: double
+		dataType: int64
 		lineageTag: 55fdee67-bf4d-465b-993a-d8b83ef74b3a
 		summarizeBy: none
 		sourceColumn: VENDOR_ID

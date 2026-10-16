@@ -7,11 +7,11 @@ model Model
 		legacyRedirects
 		returnErrorValuesAsNull
 
-annotation __PBI_TimeIntelligenceEnabled = 1
+annotation __PBI_TimeIntelligenceEnabled = 0
 
 annotation PBI_QueryOrder = ["DIM_CIRCUIT","DIM_DATE_CERTAINTY","DIM_DISTRICT","FACT_DQ_ISSUE","DIM_VENDOR","FACT_ROW_PLAN","Snowflake_Server","WH"]
 
-annotation PBI_ProTooling = ["DevMode"]
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
 
 ref table DIM_CIRCUIT
 ref table DIM_DATE_CERTAINTY
@@ -19,10 +19,8 @@ ref table DIM_DISTRICT
 ref table FACT_DQ_ISSUE
 ref table DIM_VENDOR
 ref table FACT_ROW_PLAN
-ref table DateTableTemplate_43dffbdc-84f2-447c-b3d7-b0b4f037768d
-ref table LocalDateTable_6662a466-e1fd-4abf-8ccd-c164c1ab756d
-ref table LocalDateTable_b6859bf1-4328-43c4-ab85-de12aa9e80e1
 ref table @Measures
+ref table DIM_DATE
 
 ref cultureInfo en-US
 

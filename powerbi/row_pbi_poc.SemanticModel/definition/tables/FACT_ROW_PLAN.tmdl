@@ -3,6 +3,7 @@ table FACT_ROW_PLAN
 
 	column FEEDER_ID
 		dataType: string
+		isHidden
 		lineageTag: 2f1c4fc2-677e-4a78-9a60-8f5d287ef041
 		summarizeBy: none
 		sourceColumn: FEEDER_ID
@@ -10,7 +11,8 @@ table FACT_ROW_PLAN
 		annotation SummarizationSetBy = Automatic
 
 	column VENDOR_ID
-		dataType: double
+		dataType: int64
+		isHidden
 		lineageTag: 5c0af353-e899-4a69-8673-8901a89f1a03
 		summarizeBy: none
 		sourceColumn: VENDOR_ID
@@ -25,11 +27,6 @@ table FACT_ROW_PLAN
 		lineageTag: 7cdefaf0-5018-4929-931a-057f8da8f471
 		summarizeBy: none
 		sourceColumn: LAST_CLEARED_DATE
-
-		variation Variation
-			isDefault
-			relationship: e84f0a1d-e34f-4f4e-bd49-1ca6e5c0f03e
-			defaultHierarchy: LocalDateTable_6662a466-e1fd-4abf-8ccd-c164c1ab756d.'Date Hierarchy'
 
 		annotation SummarizationSetBy = Automatic
 
@@ -50,17 +47,13 @@ table FACT_ROW_PLAN
 		summarizeBy: none
 		sourceColumn: NEXT_CLEARING_DATE
 
-		variation Variation
-			isDefault
-			relationship: 22a16869-26f1-4ae8-b7c3-88c2d0e11a28
-			defaultHierarchy: LocalDateTable_b6859bf1-4328-43c4-ab85-de12aa9e80e1.'Date Hierarchy'
-
 		annotation SummarizationSetBy = Automatic
 
 		annotation UnderlyingDateTimeDataType = Date
 
 	column DATE_CERTAINTY
 		dataType: string
+		isHidden
 		lineageTag: 4dd265a3-745d-4df8-9023-0956144681d5
 		summarizeBy: none
 		sourceColumn: DATE_CERTAINTY
@@ -68,9 +61,9 @@ table FACT_ROW_PLAN
 		annotation SummarizationSetBy = Automatic
 
 	column PLANNED_YEAR
-		dataType: double
+		dataType: int64
 		lineageTag: aeb05c0a-1d96-440d-9a43-83f2f8ef4f05
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: PLANNED_YEAR
 
 		annotation SummarizationSetBy = Automatic
@@ -87,8 +80,9 @@ table FACT_ROW_PLAN
 
 	column DQ_ISSUE_COUNT
 		dataType: double
+		isHidden
 		lineageTag: a815becd-5849-42b9-808d-ade4102f2447
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: DQ_ISSUE_COUNT
 
 		annotation SummarizationSetBy = Automatic
