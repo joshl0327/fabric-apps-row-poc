@@ -6,7 +6,7 @@ long it took. Record agent time and review time separately.
 
 | Date | Phase | Tool / model | Agent time (min) | Review time (min) | Result | Human fixes needed | Standards followed? | Notes |
 |---|---|---|---|---|---|---|---|---|
-| | R0. Setup | | | | | | — | Versions: Claude Code, powerbi-authoring plugin, MCP server, powerbi-report-author |
+| 2026-10-15 | R0. Setup | Claude Code 2.1.181 (Opus 4.8); powerbi-authoring plugin <version>, MCP server bundled (unpinned, pulls latest); powerbi-report-author 0.5.0; Node 24.20 | 0 | 10 | Pass: 1 Power BI MCP server, 3 skills loaded, doctor OK, Desktop bridge ready, theme builds | Report CLI installed separately (not bundled with the plugin); removed old user-level MCP entry; theme "modified" flag was line endings only | — | Kit merged with POC guardrails (AGENTS.md, CLAUDE.md, settings.json) |
 | | R1. Profile and settle the model | | | | | | — | |
 | | R2. Measures | | | | | | — | |
 | | R3. Spec | | | | | | | |
