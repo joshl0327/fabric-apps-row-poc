@@ -5,7 +5,7 @@ import {
 } from '@microsoft/rayfin-auth-provider-fabric';
 import type { RayfinClient } from '@microsoft/rayfin-client';
 
-import type { TodoAppSchema } from '../../rayfin/data/schema';
+import type { ClearingPlanAppSchema } from '../../rayfin/data/schema';
 
 import { type AuthUser, type IAuthService, toAuthUser } from './IAuthService';
 
@@ -21,7 +21,7 @@ export class RayfinAuthService implements IAuthService {
   readonly fabricAuthEnabled = true;
 
   constructor(
-    private readonly client: RayfinClient<TodoAppSchema>,
+    private readonly client: RayfinClient<ClearingPlanAppSchema>,
     private readonly fabricOptions: FabricAuthOptions
   ) {}
 
@@ -55,5 +55,12 @@ export class RayfinAuthService implements IAuthService {
     );
     if (!session?.isAuthenticated || !session.user) return null;
     return toAuthUser(session.user);
+  }
+
+  async getDiagnosticClaims(): Promise<Record<string, unknown>> {
+    const session = this.client.auth.getSession();
+    // The session is opaque; surface exactly what the user object carries. If
+    // Entra role/group claims ever reach the client, they appear here.
+    return session.user ? { ...session.user } : {};
   }
 }

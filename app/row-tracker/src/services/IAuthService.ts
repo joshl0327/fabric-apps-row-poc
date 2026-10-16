@@ -40,6 +40,16 @@ export interface IAuthService {
    * any UI. Returns `null` when not running inside a Fabric iframe.
    */
   initEmbeddedAuth(): Promise<AuthUser | null>;
+
+  /**
+   * Return every claim the app can read for the signed-in user, for the
+   * diagnostic "Who am I" panel. The Rayfin session is opaque, so in practice
+   * this is whatever the session `user` exposes (id, email, name). It answers
+   * the open design question — do Entra groups/roles reach the app — once the
+   * app is deployed and signed in through Fabric. Locally the values are
+   * synthetic. Display only; never gate logic on these.
+   */
+  getDiagnosticClaims(): Promise<Record<string, unknown>>;
 }
 
 /** Map the raw session user shape to the trimmed view used in the UI. */

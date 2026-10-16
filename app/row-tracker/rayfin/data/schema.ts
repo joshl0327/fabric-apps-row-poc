@@ -1,7 +1,7 @@
-import { Todo } from './Todo.js';
+import { ClearingPlan } from './ClearingPlan.js';
 
-export type TodoAppSchema = {
-  Todo: Todo;
+export type ClearingPlanAppSchema = {
+  ClearingPlan: ClearingPlan;
 };
 
-export const schema = [Todo];
+export const schema = [ClearingPlan];

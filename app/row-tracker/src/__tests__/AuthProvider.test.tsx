@@ -16,6 +16,9 @@ const stubAuthService: IAuthService = {
   async initEmbeddedAuth() {
     return null;
   },
+  async getDiagnosticClaims() {
+    return {};
+  },
 };
 
 describe('AuthProvider', () => {

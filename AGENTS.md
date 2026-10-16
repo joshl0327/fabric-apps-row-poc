@@ -24,7 +24,7 @@ data only.
 | `docs/` | Decisions, cleaning rules, requirements, POC log, run sheet |
 | `tests/dax/` | DAX profiling and measure validation queries |
 | `_brief/` | Report spec written by the report planner |
-| `app/` | Fabric App (later phase) |
+| `app/row-tracker/` | Fabric App (Rayfin SDK/CLI, TypeScript). ROW clearing tracker slice — see the "Fabric App" section below and `docs/app-notes.md`. |
 
 For Power BI, the agent takes the semantic model to a **draft** report. A
 Power BI developer (me) reviews, adjusts and signs off.
@@ -202,6 +202,28 @@ logo `themes/assets/brillit-logo.png`.
 | Publishing to Fabric | `powerbi-report-cli` management mode: **only when I ask** |
 
 The report spec lives in `_brief/report-spec.md`.
+
+## Fabric App
+
+The app lives in `app/row-tracker` (Rayfin SDK/CLI, TypeScript). Work there, and
+read `app/row-tracker/AGENTS.md` and `app/row-tracker/.agents/skills/rayfin/`
+for Rayfin specifics. **Where the app's `AGENTS.md` and this root file disagree,
+this file wins.** `docs/app-notes.md` is the slice's build notes and open
+questions.
+
+- **Rayfin docs:** read them from `node_modules` first (the skill files point
+  the way); if a lookup is still needed, run `npx rayfin docs ...` from
+  `app/row-tracker` and I approve each call. Don't register or start the Rayfin
+  MCP server or edit `.mcp.json`.
+- **Local run must not touch Fabric.** Use plain Vite —
+  `cd app/row-tracker && npm run dev:frontend` — which starts only the frontend
+  (backend-free synthetic auth, in-memory seeded data). **`npx rayfin dev` /
+  `npm run dev` provisions a Fabric AppBackend by default, so treat it like a
+  deploy: ask first.**
+- **No deploy, no Fabric `db` command, no new dependency without my ask.**
+  `npx rayfin up`, `rayfin up db apply`, and `rayfin dev` all require my ask in
+  that session. Don't install an npm package without approval.
+- **Never read `.env` files**, including `app/row-tracker/rayfin/.env`.
 
 ## Guardrails for Power BI work
 

@@ -12,6 +12,8 @@ import { type AuthUser, type IAuthService } from '@/services/IAuthService';
 
 interface AuthContextValue {
   user: AuthUser | null;
+  /** Diagnostic: every claim the app can read for the user. Display only. */
+  claims: Record<string, unknown> | null;
   loading: boolean;
   error: string | null;
   signIn: () => Promise<AuthUser>;
@@ -29,8 +31,17 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, authService }: AuthProviderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [claims, setClaims] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const refreshClaims = useCallback(async () => {
+    try {
+      setClaims(await authService.getDiagnosticClaims());
+    } catch {
+      setClaims(null);
+    }
+  }, [authService]);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,7 +49,10 @@ export function AuthProvider({ children, authService }: AuthProviderProps) {
       .initEmbeddedAuth()
       .then((embedded) => embedded ?? authService.getCurrentUser())
       .then((current) => {
-        if (!cancelled && current) setUser(current);
+        if (!cancelled && current) {
+          setUser(current);
+          void refreshClaims();
+        }
       })
       .catch(() => {
         if (!cancelled) setUser(null);
@@ -49,7 +63,7 @@ export function AuthProvider({ children, authService }: AuthProviderProps) {
     return () => {
       cancelled = true;
     };
-  }, [authService]);
+  }, [authService, refreshClaims]);
 
   const signIn = useCallback(async () => {
     setError(null);
@@ -57,6 +71,7 @@ export function AuthProvider({ children, authService }: AuthProviderProps) {
     try {
       const loggedInUser = await authService.signIn();
       setUser(loggedInUser);
+      void refreshClaims();
       return loggedInUser;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
@@ -65,7 +80,7 @@ export function AuthProvider({ children, authService }: AuthProviderProps) {
     } finally {
       setLoading(false);
     }
-  }, [authService]);
+  }, [authService, refreshClaims]);
 
   const signOut = useCallback(async () => {
     try {
@@ -79,6 +94,7 @@ export function AuthProvider({ children, authService }: AuthProviderProps) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      claims,
       loading,
       error,
       signIn,
@@ -86,7 +102,7 @@ export function AuthProvider({ children, authService }: AuthProviderProps) {
       isAuthenticated: !!user,
       fabricAuthEnabled: authService.fabricAuthEnabled,
     }),
-    [user, loading, error, signIn, signOut, authService]
+    [user, claims, loading, error, signIn, signOut, authService]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

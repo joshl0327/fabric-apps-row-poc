@@ -1,7 +1,6 @@
 import { resolveRayfinFunctionsBaseUrl } from '@microsoft/rayfin-local-dev';
 
 import type { IAuthService } from './IAuthService';
-import { MockAuthService } from './MockAuthService';
 import { RayfinAuthService } from './RayfinAuthService';
 import { initRayfinClient } from './rayfinClient';
 
@@ -18,7 +17,7 @@ function isLocalBackendUrl(url: string): boolean {
  * Read VITE_* env vars, initialize the Rayfin client, and return the right
  * auth service for the target backend.
  *
- * - Localhost API URL → {@link MockAuthService}
+ * - Localhost API URL → backend-free LocalAuthService (DEV-only)
  * - Anything else     → {@link RayfinAuthService} (requires VITE_FABRIC_* vars)
  */
 export async function bootstrapAuth(): Promise<IAuthService> {
@@ -44,8 +43,10 @@ export async function bootstrapAuth(): Promise<IAuthService> {
     },
   });
 
-  if (localDev) {
-    return new MockAuthService(client);
+  if (localDev && import.meta.env.DEV) {
+    // Load the local stub only in dev so it stays out of production bundles.
+    const { LocalAuthService } = await import('./LocalAuthService');
+    return new LocalAuthService();
   }
 
   const {
