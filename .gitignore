@@ -27,6 +27,7 @@ data/out/
 **/.pbi/cache.abf
 review/screenshots/
 docs/ai-governance-options.md
+Initial_PBI_Reporting.md
 
 # --- OS / editor ---
 .DS_Store
