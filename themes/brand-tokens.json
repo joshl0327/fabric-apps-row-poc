@@ -1,0 +1,44 @@
+{
+  "name": "BrilliT",
+  "status": "Initial template derived from brillit.com (colors sampled from the site, Oct 2026). Font set to Arial by request. Replace the logo crop with the official file from marketing.",
+  "source": {
+    "navy band": "#002f6e (page title bands on About/Services)",
+    "logo blue": "#015a9c (\"brill\" in the logo)",
+    "web green": "#00c18c (\"IT\" / \"INNOVATION\" text, heading rules, service headings)",
+    "heading navy": "#193768 (section headings and icons)"
+  },
+  "brand": {
+    "primary": "#002f6e",
+    "secondary": "#015a9c",
+    "accent": "#00c18c",
+    "accentText": "#007f5b",
+    "logo": "themes/assets/brillit-logo.png"
+  },
+  "surface": {
+    "page": "#f3f5f8",
+    "card": "#ffffff",
+    "alt": "#f7f8fa",
+    "border": "#d9dde3",
+    "brandBar": "#ffffff",
+    "headerBand": "#002f6e",
+    "headerText": "#ffffff"
+  },
+  "text": {
+    "primary": "#202124",
+    "secondary": "#595a5c",
+    "muted": "#737375",
+    "heading": "#193768"
+  },
+  "chrome": {
+    "gridline": "#e6e9ee"
+  },
+  "typography": {
+    "body": "Arial",
+    "semibold": "Arial"
+  },
+  "categorical": ["#015a9c", "#eb6834", "#00c18c", "#eda100", "#6250d6", "#e87ba4"],
+  "sequential": { "min": "#d6e6f3", "max": "#002f6e" },
+  "diverging": { "negative": "#eb6834", "center": "#eeeeee", "positive": "#015a9c" },
+  "semantic": { "good": "#0ca30c", "warning": "#fab219", "bad": "#d03b3b" },
+  "null": "#9aa0a6"
+}

@@ -1,5 +1,17 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "extraKnownMarketplaces": {
+    "fabric-collection": {
+      "source": {
+        "source": "github",
+        "repo": "microsoft/skills-for-fabric"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "powerbi-authoring@fabric-collection": true,
+    "frontend-design@claude-plugins-official": false
+  },
   "permissions": {
     "allow": [
       "Bash(git status *)",
@@ -7,7 +19,11 @@
       "Bash(git log *)",
       "Bash(git switch *)",
       "Bash(git checkout -b *)",
-      "Bash(.venv/Scripts/python data/generate.py *)"
+      "Bash(.venv/Scripts/python data/generate.py *)",
+      "Bash(powerbi-report-author validate *)",
+      "Bash(powerbi-report-author preview * --host desktop*)",
+      "PowerShell(powerbi-report-author validate *)",
+      "PowerShell(powerbi-report-author preview * --host desktop*)"
     ],
     "ask": [
       "Bash(git add *)",
@@ -15,21 +31,31 @@
       "Bash(gh pr create *)",
       "Bash(npx rayfin *)",
       "Bash(snow *)",
+      "Bash(az *)",
+      "Bash(fab *)",
+      "Bash(powerbi-report-author pack *)",
+      "Bash(powerbi-report-author preview * --host service*)",
       "Bash(rm *)",
       "PowerShell(git add *)",
       "PowerShell(git commit *)",
       "PowerShell(gh pr create *)",
       "PowerShell(npx rayfin *)",
       "PowerShell(snow *)",
+      "PowerShell(az *)",
+      "PowerShell(fab *)",
+      "PowerShell(powerbi-report-author pack *)",
+      "PowerShell(powerbi-report-author preview * --host service*)",
       "PowerShell(Remove-Item *)"
     ],
     "deny": [
       "Bash(git push *)",
       "Bash(git reset --hard *)",
+      "Bash(git clean *)",
       "Bash(gh pr merge *)",
       "Bash(npx rayfin * --force*)",
       "PowerShell(git push *)",
       "PowerShell(git reset --hard *)",
+      "PowerShell(git clean *)",
       "PowerShell(gh pr merge *)",
       "PowerShell(npx rayfin * --force*)",
       "Read(./.env)",

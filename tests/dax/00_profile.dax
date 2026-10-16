@@ -1,0 +1,73 @@
+// 00_profile.dax — run before writing any measure.
+// Answers the "Open model questions" in AGENTS.md. Read-only.
+// Run through the Power BI Authoring MCP server or paste into DAX query view.
+
+// 1. Grain and key integrity of FACT_ROW_PLAN
+EVALUATE
+ROW (
+    "Plan rows", COUNTROWS ( FACT_ROW_PLAN ),
+    "Distinct feeders in plan", DISTINCTCOUNT ( FACT_ROW_PLAN[FEEDER_ID] ),
+    "Distinct feeder-years in plan",
+        COUNTROWS ( SUMMARIZE ( FACT_ROW_PLAN, FACT_ROW_PLAN[FEEDER_ID], FACT_ROW_PLAN[PLANNED_YEAR] ) ),
+    "Feeders in DIM_CIRCUIT", COUNTROWS ( DIM_CIRCUIT ),
+    "Plan rows with no circuit match",
+        COUNTROWS ( FILTER ( FACT_ROW_PLAN, ISBLANK ( RELATED ( DIM_CIRCUIT[FEEDER_ID] ) ) ) ),
+    "Plan rows with no vendor", COUNTROWS ( FILTER ( FACT_ROW_PLAN, ISBLANK ( FACT_ROW_PLAN[VENDOR_ID] ) ) ),
+    "Plan rows missing NEXT_CLEARING_DATE",
+        COUNTROWS ( FILTER ( FACT_ROW_PLAN, ISBLANK ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ) ) ),
+    "Plan rows missing LAST_CLEARED_DATE",
+        COUNTROWS ( FILTER ( FACT_ROW_PLAN, ISBLANK ( FACT_ROW_PLAN[LAST_CLEARED_DATE] ) ) ),
+    "Earliest NEXT_CLEARING_DATE", MIN ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ),
+    "Latest NEXT_CLEARING_DATE", MAX ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] )
+)
+
+// 2. Plan rows vs feeders by planned year (if rows > feeders, a feeder repeats within a year)
+EVALUATE
+SUMMARIZECOLUMNS (
+    FACT_ROW_PLAN[PLANNED_YEAR],
+    "Plan rows", COUNTROWS ( FACT_ROW_PLAN ),
+    "Feeders", DISTINCTCOUNT ( FACT_ROW_PLAN[FEEDER_ID] )
+)
+ORDER BY FACT_ROW_PLAN[PLANNED_YEAR]
+
+// 3. Date certainty values, sort order, and usage
+EVALUATE
+ADDCOLUMNS (
+    VALUES ( DIM_DATE_CERTAINTY[DATE_CERTAINTY] ),
+    "Sort order", CALCULATE ( MAX ( DIM_DATE_CERTAINTY[SORT_ORDER] ) ),
+    "Plan rows", CALCULATE ( COUNTROWS ( FACT_ROW_PLAN ) )
+)
+ORDER BY [Sort order]
+
+// 4. Do the two data-quality counts reconcile?
+EVALUATE
+ROW (
+    "SUM of FACT_ROW_PLAN[DQ_ISSUE_COUNT]", SUM ( FACT_ROW_PLAN[DQ_ISSUE_COUNT] ),
+    "Rows in FACT_DQ_ISSUE", COUNTROWS ( FACT_DQ_ISSUE ),
+    "Feeders with DQ issues", DISTINCTCOUNT ( FACT_DQ_ISSUE[FEEDER_ID] ),
+    "DQ rows with no circuit match",
+        COUNTROWS ( FILTER ( FACT_DQ_ISSUE, ISBLANK ( RELATED ( DIM_CIRCUIT[FEEDER_ID] ) ) ) )
+)
+
+// 5. Data-quality mix
+EVALUATE
+SUMMARIZECOLUMNS (
+    FACT_DQ_ISSUE[ISSUE_TYPE],
+    FACT_DQ_ISSUE[SOURCE_COLUMN],
+    "Issues", COUNTROWS ( FACT_DQ_ISSUE )
+)
+ORDER BY [Issues] DESC
+
+// 6. District duplication: does DIM_CIRCUIT's district name always match DIM_DISTRICT?
+EVALUATE
+ROW (
+    "Circuits whose district names disagree",
+        COUNTROWS (
+            FILTER (
+                DIM_CIRCUIT,
+                DIM_CIRCUIT[RESPONSIBLE_DISTRICT_NAME] <> RELATED ( DIM_DISTRICT[DISTRICT_NAME] )
+            )
+        ),
+    "Circuits with no district match",
+        COUNTROWS ( FILTER ( DIM_CIRCUIT, ISBLANK ( RELATED ( DIM_DISTRICT[DISTRICT_ID] ) ) ) )
+)
