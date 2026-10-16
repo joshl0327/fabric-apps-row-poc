@@ -6,6 +6,166 @@ table @Measures
 		displayFolder: 00 - Base
 		lineageTag: f573c5ed-d837-4b05-8ece-883c39f28d6c
 
+	/// Distinct feeders that have a plan row in the current filter context. Base measure reused by the percentage and overdue/due-soon measures.
+	measure 'Feeders in Plan' = DISTINCTCOUNT ( FACT_ROW_PLAN[FEEDER_ID] )
+		formatString: #,0
+		displayFolder: 10 - Plan
+		lineageTag: e0b37b4b-9e18-4b6e-a237-cf8b682453fe
+
+	/// Line miles of the feeders in the plan, each feeder counted once (grain is one row per feeder). Responds to vendor and date-certainty filters. Base measure.
+	measure 'Line Miles in Plan' = SUMX ( FACT_ROW_PLAN, RELATED ( DIM_CIRCUIT[LINE_MILES] ) )
+		formatString: #,0.0
+		displayFolder: 10 - Plan
+		lineageTag: 996e97b6-4d63-41c3-a5af-582a6b703362
+
+	/// Share of feeders in the plan whose next-clearing date certainty is 'confirmed' (confirmed only), divided by Feeders in Plan.
+	measure '% Plan Date Confirmed' =
+			VAR _confirmed = CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] = "confirmed" )
+			RETURN
+			    DIVIDE ( _confirmed, [Feeders in Plan] )
+		formatString: 0.0%
+		displayFolder: 10 - Plan
+		lineageTag: a8c70ab8-ac43-47dd-859b-8eeefb63e870
+
+	/// Feeders whose date certainty is 'next year' (a planned year is known but no firm date).
+	measure 'Feeders Next Year' = CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] = "next year" )
+		formatString: #,0
+		displayFolder: 10 - Plan
+		lineageTag: 6263b361-4ee4-410e-be63-d92ec0b87b50
+
+	/// Feeders whose date certainty is 'TBD' (no planned date at all).
+	measure 'Feeders TBD' = CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] = "TBD" )
+		formatString: #,0
+		displayFolder: 10 - Plan
+		lineageTag: b8e8a972-db7f-4e1a-a2aa-c9e75d428915
+
+	/// Feeders with a real next-clearing date (certainty confirmed or tentative, date not blank) that falls before today.
+	measure 'Feeders Overdue' =
+			VAR _today = TODAY ()
+			RETURN
+			    CALCULATE (
+			        [Feeders in Plan],
+			        FACT_ROW_PLAN[NEXT_CLEARING_DATE] < _today
+			            && NOT ISBLANK ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ),
+			        FACT_ROW_PLAN[DATE_CERTAINTY] IN { "confirmed", "tentative" }
+			    )
+		formatString: #,0
+		displayFolder: 20 - Clearing Cycle
+		lineageTag: 7d89f2c3-e9c1-46d1-ac7b-49bd3c70a8d4
+
+	/// Line miles on overdue feeders (same rule as Feeders Overdue).
+	measure 'Line Miles Overdue' =
+			VAR _today = TODAY ()
+			RETURN
+			    CALCULATE (
+			        [Line Miles in Plan],
+			        FACT_ROW_PLAN[NEXT_CLEARING_DATE] < _today
+			            && NOT ISBLANK ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ),
+			        FACT_ROW_PLAN[DATE_CERTAINTY] IN { "confirmed", "tentative" }
+			    )
+		formatString: #,0.0
+		displayFolder: 20 - Clearing Cycle
+		lineageTag: c86af8f9-0663-4ff4-a87a-3aff83caa587
+
+	/// Feeders whose next-clearing date falls from today through today + 90 days.
+	measure 'Feeders Due Soon' =
+			VAR _today = TODAY ()
+			VAR _window = _today + 90
+			RETURN
+			    CALCULATE (
+			        [Feeders in Plan],
+			        FACT_ROW_PLAN[NEXT_CLEARING_DATE] >= _today
+			            && FACT_ROW_PLAN[NEXT_CLEARING_DATE] <= _window
+			    )
+		formatString: #,0
+		displayFolder: 20 - Clearing Cycle
+		lineageTag: f9699e55-9aad-413e-b43e-dc9b6e7c7819
+
+	/// Average number of years from each feeder's last-cleared date to today, over feeders that have a last-cleared date (blanks excluded).
+	measure 'Avg Years Since Last Clearing' =
+			VAR _today = TODAY ()
+			RETURN
+			    AVERAGEX (
+			        FILTER ( FACT_ROW_PLAN, NOT ISBLANK ( FACT_ROW_PLAN[LAST_CLEARED_DATE] ) ),
+			        DATEDIFF ( FACT_ROW_PLAN[LAST_CLEARED_DATE], _today, DAY ) / 365.25
+			    )
+		formatString: 0.0
+		displayFolder: 20 - Clearing Cycle
+		lineageTag: 003c96d4-66e9-4058-8dfe-9d0c382b5825
+
+	/// Feeders whose last-cleared date is more than 5 years before today. Feeders with no last-cleared date are excluded (counted separately, not here).
+	measure 'Feeders Not Cleared 5+ Years' =
+			VAR _cutoff = EDATE ( TODAY (), -60 )
+			RETURN
+			    CALCULATE (
+			        [Feeders in Plan],
+			        FACT_ROW_PLAN[LAST_CLEARED_DATE] < _cutoff
+			            && NOT ISBLANK ( FACT_ROW_PLAN[LAST_CLEARED_DATE] )
+			    )
+		formatString: #,0
+		displayFolder: 20 - Clearing Cycle
+		lineageTag: ca916540-520f-45ba-badb-4ffde23e4734
+
+	/// Line miles in the plan surfaced for vendor-workload visuals; reuses the Line Miles in Plan base measure and responds to the vendor on the visual.
+	measure 'Line Miles by Vendor' = [Line Miles in Plan]
+		formatString: #,0.0
+		displayFolder: 30 - Vendors
+		lineageTag: be8c9509-3215-46bf-9e0f-41ea3f2b8985
+
+	/// Count of data-quality issues logged from the source spreadsheet (rows in FACT_DQ_ISSUE), including the 2 orphan-feeder issues.
+	measure 'DQ Issues' = COUNTROWS ( FACT_DQ_ISSUE )
+		formatString: #,0
+		displayFolder: 40 - Data Quality
+		lineageTag: 90916e80-ce2e-49d3-8484-25b324a864a6
+
+	/// Distinct feeders that exist in the plan (match a circuit) and have at least one data-quality issue. Orphan feeders, which have no matching circuit, are excluded.
+	measure 'Feeders with DQ Issues' =
+			CALCULATE (
+			    DISTINCTCOUNT ( FACT_DQ_ISSUE[FEEDER_ID] ),
+			    FILTER ( FACT_DQ_ISSUE, NOT ISBLANK ( RELATED ( DIM_CIRCUIT[FEEDER_ID] ) ) )
+			)
+		formatString: #,0
+		displayFolder: 40 - Data Quality
+		lineageTag: a6627492-81f7-4b86-b5fa-e11fe36ec415
+
+	/// Feeders with DQ Issues divided by Feeders in Plan.
+	measure '% Feeders with DQ Issues' = DIVIDE ( [Feeders with DQ Issues], [Feeders in Plan] )
+		formatString: 0.0%
+		displayFolder: 40 - Data Quality
+		lineageTag: e4a62477-15e1-4420-8084-7f23395df1ca
+
+	/// Data-quality issues of type orphan_feeder: feeders in the spreadsheet with no matching circuit, needing manual review.
+	measure 'Orphans to Review' = CALCULATE ( COUNTROWS ( FACT_DQ_ISSUE ), FACT_DQ_ISSUE[ISSUE_TYPE] = "orphan_feeder" )
+		formatString: #,0
+		displayFolder: 40 - Data Quality
+		lineageTag: 545c7d5c-347b-4112-a431-ba848e0beaa6
+
+	/// Report-support helper: per-feeder clearing status text for the Clearing Plan table status column and its conditional format. Overdue = confirmed/tentative with a next date before today; Due soon = next date within 90 days; No date = blank next date; otherwise Scheduled. Returns BLANK for feeders with no plan row (e.g. orphan DQ feeders) so the blank DIM_CIRCUIT member is dropped from visuals.
+	measure 'Clearing Status' =
+			VAR _today = TODAY ()
+			VAR _feeder = SELECTEDVALUE ( FACT_ROW_PLAN[FEEDER_ID] )
+			VAR _next = SELECTEDVALUE ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] )
+			VAR _certainty = SELECTEDVALUE ( FACT_ROW_PLAN[DATE_CERTAINTY] )
+			RETURN
+			    IF (
+			        ISBLANK ( _feeder ),
+			        BLANK (),
+			        SWITCH (
+			            TRUE (),
+			            ISBLANK ( _next ), "No date",
+			            _certainty IN { "confirmed", "tentative" } && _next < _today, "Overdue",
+			            _next >= _today && _next <= _today + 90, "Due soon",
+			            "Scheduled"
+			        )
+			    )
+		displayFolder: 90 - Helpers
+		lineageTag: 19db12df-3947-4e85-85bf-0486e433e88e
+
+	/// Report-support helper: dynamic page title for the Feeder Detail drillthrough, naming the selected feeder.
+	measure 'Feeder Detail Title' = "Feeder " & SELECTEDVALUE ( DIM_CIRCUIT[FEEDER_ID], "(select a feeder)" )
+		displayFolder: 90 - Helpers
+		lineageTag: 0cfe12f2-a578-4b12-857d-e698a47b850c
+
 	column Column
 		isHidden
 		formatString: 0
