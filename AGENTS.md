@@ -130,9 +130,11 @@ Business definitions (decided):
 
 Target: every relationship one-to-many, single direction. Filter paths:
 DIM_DISTRICT → DIM_CIRCUIT → FACT_ROW_PLAN and FACT_DQ_ISSUE; DIM_VENDOR and
-DIM_DATE_CERTAINTY → FACT_ROW_PLAN. Known gap: `FACT_ROW_PLAN` ↔ `DIM_CIRCUIT`
-was created one-to-one, both directions (both sides have 153 unique feeders).
-Raise it in R1; don't change it without asking.
+DIM_DATE_CERTAINTY → FACT_ROW_PLAN. `FACT_ROW_PLAN` → `DIM_CIRCUIT` is
+many-to-one, single direction (both sides have 153 unique feeders). This was
+originally created one-to-one both directions; Josh changed it to many-to-one
+single direction before R1. Confirmed in R1 profiling (see `docs/decisions.md`,
+2026-10-15).
 
 Table and column names stay as they are (`DIM_` / `FACT_` naming).
 
