@@ -6,40 +6,47 @@ table DIM_DATE
 	column Date
 		isUnique
 		formatString: Long Date
+		lineageTag: 23dcf6a9-3f47-4d49-984d-308e45ab2924
 		summarizeBy: none
 		isNameInferred
 		sourceColumn: [Date]
 
 	column Year
+		lineageTag: 4b9dc227-a758-47ef-bb70-6e96a4154ac7
 		summarizeBy: none
 		isNameInferred
 		sourceColumn: [Year]
 
 	column 'Month Number'
 		isHidden
+		lineageTag: 74ee5d0e-51c1-4719-be65-6198194b083d
 		summarizeBy: none
 		isNameInferred
 		sourceColumn: [Month Number]
 
 	column Month
+		lineageTag: 77190bbb-c0d8-4378-bff7-5e6e3498991c
 		summarizeBy: none
 		isNameInferred
 		sourceColumn: [Month]
 		sortByColumn: 'Month Number'
 
 	column 'Month Year'
+		lineageTag: 6a4b2aa3-645f-4745-a825-191a01138dbb
 		summarizeBy: none
 		isNameInferred
 		sourceColumn: [Month Year]
 		sortByColumn: 'Year Month Sort'
 
 	column Quarter
+		lineageTag: 942834a5-3421-424c-8ab3-00d00a94bbc2
 		summarizeBy: none
 		isNameInferred
 		sourceColumn: [Quarter]
 
 	column 'Year Month Sort'
 		isHidden
+		lineageTag: fe98d653-49f6-438b-9e57-e4c5fd2f6e04
 		summarizeBy: none
 		isNameInferred
 		sourceColumn: [Year Month Sort]

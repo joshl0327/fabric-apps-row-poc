@@ -48,7 +48,7 @@ table DIM_CIRCUIT
 	column LINE_MILES
 		dataType: double
 		lineageTag: 2c143e7c-f063-405d-969e-4d8c2d095d66
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: LINE_MILES
 
 		annotation SummarizationSetBy = Automatic

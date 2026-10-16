@@ -1,0 +1,129 @@
+// 10_measures.dax — one validation query per R2 measure.
+// Run against the live Desktop model through the Power BI Authoring MCP server.
+// Recorded results are at "Today" = 2026-10-16 (measures use TODAY(), so
+// overdue / due-soon / years-since figures shift as the real date moves).
+// Read-only: these queries only read the model.
+
+// ---------------------------------------------------------------------------
+// 10 - Plan
+// ---------------------------------------------------------------------------
+
+// Feeders in Plan — distinct feeders with a plan row.
+EVALUATE ROW ( "Feeders in Plan", [Feeders in Plan] )
+// RESULT: 153  (matches expected grain: 153 distinct feeders)
+
+// Line Miles in Plan — LINE_MILES summed over plan feeders (each once).
+// Cross-check: at no filter it must equal SUM ( DIM_CIRCUIT[LINE_MILES] ).
+EVALUATE
+ROW (
+    "Line Miles in Plan", [Line Miles in Plan],
+    "SUM DIM_CIRCUIT[LINE_MILES]", SUM ( DIM_CIRCUIT[LINE_MILES] )
+)
+// RESULT: 4634.7 and 4634.7 — equal, as required.
+
+// % Plan Date Confirmed — confirmed-only feeders / Feeders in Plan.
+EVALUATE ROW ( "% Plan Date Confirmed", [% Plan Date Confirmed] )
+// RESULT: 0.9281 = 92.8%  (142 confirmed / 153)
+
+// Feeders Next Year — certainty "next year".
+EVALUATE ROW ( "Feeders Next Year", [Feeders Next Year] )
+// RESULT: (blank) = 0 feeders — no "next year" rows in the synthetic data (R1).
+
+// Feeders TBD — certainty "TBD".
+EVALUATE ROW ( "Feeders TBD", [Feeders TBD] )
+// RESULT: 7
+
+// ---------------------------------------------------------------------------
+// 20 - Clearing Cycle
+// ---------------------------------------------------------------------------
+
+// Feeders Overdue — real date (confirmed/tentative, not blank) before today.
+EVALUATE ROW ( "Feeders Overdue", [Feeders Overdue] )
+// RESULT: 14  (as of 2026-10-16)
+
+// Line Miles Overdue — line miles on the overdue feeders.
+EVALUATE ROW ( "Line Miles Overdue", [Line Miles Overdue] )
+// RESULT: 522.9  (as of 2026-10-16)
+
+// Feeders Due Soon — next date from today through today + 90 days.
+EVALUATE ROW ( "Feeders Due Soon", [Feeders Due Soon] )
+// RESULT: 10  (as of 2026-10-16)
+
+// Avg Years Since Last Clearing — mean years from LAST_CLEARED_DATE to today,
+// blanks excluded.
+EVALUATE ROW ( "Avg Years Since Last Clearing", [Avg Years Since Last Clearing] )
+// RESULT: 2.07  (as of 2026-10-16)
+
+// Feeders Not Cleared 5+ Years — LAST_CLEARED_DATE more than 5 years ago.
+EVALUATE ROW ( "Feeders Not Cleared 5+ Years", [Feeders Not Cleared 5+ Years] )
+// RESULT: (blank) = 0 feeders — none cleared >5 years ago in the synthetic data.
+
+// ---------------------------------------------------------------------------
+// 30 - Vendors
+// ---------------------------------------------------------------------------
+
+// Line Miles by Vendor — alias of Line Miles in Plan; equals it at no filter,
+// and splits by vendor on a vendor visual.
+EVALUATE
+SUMMARIZECOLUMNS (
+    DIM_VENDOR[VENDOR_NAME],
+    "Line Miles by Vendor", [Line Miles by Vendor]
+)
+ORDER BY [Line Miles by Vendor] DESC
+// RESULT: splits across vendors; the column total reconciles to 4634.7
+// (= Line Miles in Plan). Verified it responds to the vendor grouping.
+
+// ---------------------------------------------------------------------------
+// 40 - Data Quality
+// ---------------------------------------------------------------------------
+
+// DQ Issues — rows in FACT_DQ_ISSUE (incl. the 2 orphan-feeder issues).
+EVALUATE ROW ( "DQ Issues", [DQ Issues] )
+// RESULT: 69
+
+// Feeders with DQ Issues — distinct in-plan feeders (match a circuit) with >=1 issue.
+EVALUATE ROW ( "Feeders with DQ Issues", [Feeders with DQ Issues] )
+// RESULT: 63  (65 distinct feeders carry issues; 2 are orphans, excluded)
+
+// % Feeders with DQ Issues — Feeders with DQ Issues / Feeders in Plan.
+EVALUATE ROW ( "% Feeders with DQ Issues", [% Feeders with DQ Issues] )
+// RESULT: 0.4118 = 41.2%  (63 / 153)
+
+// Orphans to Review — issues of type orphan_feeder.
+EVALUATE ROW ( "Orphans to Review", [Orphans to Review] )
+// RESULT: 2
+
+// ---------------------------------------------------------------------------
+// Reconciliation checks (Part A, step 3)
+// ---------------------------------------------------------------------------
+EVALUATE
+ROW (
+    "Feeders in Plan (=153)", [Feeders in Plan],
+    "Certainty total (=153)", CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] IN { "confirmed", "tentative", "next year", "TBD" } ),
+    "Feeders with next date (=142)", CALCULATE ( [Feeders in Plan], NOT ISBLANK ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ) ),
+    "Overdue + Due Soon (<=142)", [Feeders Overdue] + [Feeders Due Soon]
+)
+// RESULT: 153, 153, 142, 24 — all checks pass (confirmed 142 + tentative 4
+// + next year 0 + TBD 7 = 153; 24 <= 142).
+
+// ---------------------------------------------------------------------------
+// 90 - Helpers (report-support measures added in R4/Part C)
+// ---------------------------------------------------------------------------
+
+// Clearing Status — per-feeder status text for the Clearing Plan table.
+// Returns BLANK for feeders with no plan row (drops the blank DIM_CIRCUIT
+// member the 2 orphan DQ feeders inject). Counts must reconcile to 153 and
+// to Feeders Overdue (14) / Feeders Due Soon (10).
+DEFINE
+    VAR _perFeeder = SUMMARIZECOLUMNS ( DIM_CIRCUIT[FEEDER_ID], "Status", [Clearing Status] )
+EVALUATE
+    GROUPBY ( _perFeeder, [Status], "Feeders", COUNTX ( CURRENTGROUP (), 1 ) )
+ORDER BY [Feeders] DESC
+// RESULT: Scheduled 118, Overdue 14, No date 11, Due soon 10 — total 153.
+// Overdue = Feeders Overdue (14); Due soon = Feeders Due Soon (10);
+// No date = feeders with blank NEXT_CLEARING_DATE (11, per R1).
+
+// Feeder Detail Title — dynamic drillthrough page title.
+EVALUATE ROW ( "Title (no selection)", [Feeder Detail Title] )
+// RESULT: "Feeder (select a feeder)" with no feeder selected; on the
+// drillthrough it reads e.g. "Feeder 214-2".
