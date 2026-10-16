@@ -100,16 +100,64 @@ synthetic data and by removing the permission immediately after seeding. The
 clean long-term answer is a seed Function or a per-row create policy, with the
 role rules.
 
+## Deployed results (2026-10-16)
+
+First deploy of the slice to `ROW-POC-Dev`, after seeding. Observations and the
+one bug found, with its fix. All of this is **only fully verifiable on the
+deployed app** — local mode uses the in-memory store, which has none of these
+behaviours (it clears correctly, has no GraphQL layer, and runs a synthetic
+local user).
+
+Observations (recorded, no code change):
+
+- **Claims panel shows only `id` and `email`** — no name, role or groups. This
+  is the Finding 2 experiment answer in the live environment: plan the role
+  model around what actually arrives (confirms the groups-claim gap).
+- **"Load sample data" with create disabled failed** with "The field
+  `createClearingPlan` does not exist on the type `Mutation`". With no role
+  granting create, the API exposes no create operation at all — so the seed
+  button only works during the gated create-enabled window (as designed).
+- **Errors showed as raw GraphQL text** in the UI — fixed below (observation 3).
+
+**Bug — clearing a field kept the old value.** Editing feeder 101-1 from
+confirmed (2026-11-15) to TBD with the next clearing date cleared saved
+"successfully" but the row still showed 2026-11-15; feeder 533-1 did the same.
+Setting values worked, clearing them didn't. Root cause: the update sent a
+cleared field as `undefined`, which the data API treats as "leave unchanged".
+The form passed its own rules (TBD with no date), so the result was silent bad
+data that broke our own cross-field rule.
+
+**Fix (this change):**
+
+1. **Explicit clear.** Cleared optional fields (`next_clearing_date`,
+   `planned_year`, `last_cleared_date`, `last_work_done`, `notes`) are now sent
+   as an explicit `null`, which the installed `@microsoft/rayfin-data` client
+   serialises to a GraphQL `null` literal (DAB applies it as "set to null").
+   `undefined` is still used only for fields the edit never touches. The
+   generated `UpdateInput` type is `value | undefined` with no `null`, so the
+   null is carried through a cast (`clearable`) — the runtime behaviour is the
+   supported mechanism, confirmed by reading the client source
+   (`formatMutationInput` skips only `undefined`; `formatGraphQLValue` renders
+   `null`).
+2. **Read-back guard.** After every save the full row is read back and compared
+   with what was submitted (`diffSavedRow`). Any field the server kept differently
+   throws a clear error naming the field and the value the server kept, so a
+   silent mismatch can't recur. (`updated_at` is not compared — a datetime can
+   lose sub-second precision on the round trip.)
+3. **Friendly errors.** Raw GraphQL text is replaced in the UI with a short
+   plain message; the full error still goes to the browser console
+   (`src/services/errors.ts`, `toUserMessage`).
+
 ## Open questions
 
-- **Entra groups / roles** (Finding 2): confirm with the claims panel after
-  deploy; then choose the fallback for the role rules.
+- **Entra groups / roles** (Finding 2): the deployed claims panel shows only
+  `id` and `email` (no groups/role) — choose the fallback for the role rules
+  (mapped `role` claim, lookup table, or a Function).
 - **Server-side cross-field enforcement** (Finding 1): add a Rayfin Function on
-  write.
-- **Clear-to-null on Fabric:** the generated mutation type takes
-  `value | undefined`, not `null`, so "clear this date" is sent as `undefined`
-  (interpreted as "leave unchanged") on the Fabric path. The in-memory local
-  path clears correctly. Needs a Fabric-path fix (confirm whether the client
-  supports an explicit null, or clear via a Function).
+  write. The read-back guard catches an inconsistent save after the fact, but
+  the rules are still only enforced client-side.
+- **Clear-to-null on Fabric: resolved.** The client does support clearing via an
+  explicit `null` (see "Deployed results" above). A Rayfin Function is no longer
+  required for this; it stays on the list only for cross-field enforcement.
 - **Audit fields:** replace client-set `updated_by` with a server-stamped value
   in the change-log step.

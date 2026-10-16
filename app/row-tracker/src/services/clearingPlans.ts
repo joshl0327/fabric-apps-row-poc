@@ -85,11 +85,68 @@ function toWrite(edit: ClearingPlanEdit, updatedBy: string) {
 }
 
 // The Rayfin mutation type takes `T | undefined` for optional fields, not
-// `null`. NOTE: this means "clear this date" is sent as undefined, which the
-// data API treats as "leave unchanged" rather than "set to null" — a known gap
-// for the Fabric path, recorded in docs/app-notes.md. The in-memory local path
-// clears correctly. Fixing clear-to-null on Fabric is a later step.
+// `null`. For CREATE, "no value" and "null" are equivalent, so collapse null to
+// undefined and let the column default to null.
 const nullToUndef = <T>(v: T | null): T | undefined => v ?? undefined;
+
+// For UPDATE, null and undefined are NOT equivalent. The installed
+// @microsoft/rayfin-data client serialises an explicit `null` to a GraphQL
+// `null` literal — which DAB applies as "set this column to null" — but OMITS an
+// `undefined` field entirely, leaving the stored value unchanged
+// (formatMutationInput skips only undefined; formatGraphQLValue renders null as
+// `null`). So clearing a field on update means sending a runtime `null`. The
+// generated `UpdateInput` type has no `null` in it, so the cast carries the null
+// through without changing it. See docs/app-notes.md "Clear-to-null on Fabric".
+const clearable = <T>(v: T | null): T | undefined => v as unknown as T | undefined;
+
+// The optional fields the edit form can clear, verified on read-back below.
+const VERIFIED_FIELDS = [
+  'vendor',
+  'date_certainty',
+  'last_cleared_date',
+  'last_work_done',
+  'next_clearing_date',
+  'planned_year',
+  'notes',
+  'updated_by',
+] as const;
+
+type SubmittedWrite = ReturnType<typeof toWrite>;
+
+const valuesEqual = (a: unknown, b: unknown): boolean => {
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  if (a instanceof Date || b instanceof Date) return false;
+  return (a ?? null) === (b ?? null);
+};
+
+const display = (v: unknown): string => {
+  if (v == null) return '(cleared)';
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v);
+};
+
+/**
+ * Compare what we submitted against the row the server actually kept. Returns a
+ * human-readable description of each field whose stored value differs, naming
+ * the value the server kept. `updated_at` is intentionally not verified: a
+ * datetime can lose sub-second precision on the round trip.
+ */
+export function diffSavedRow(
+  submitted: SubmittedWrite,
+  saved: ClearingPlanRow
+): string[] {
+  const mismatches: string[] = [];
+  for (const field of VERIFIED_FIELDS) {
+    const sent = submitted[field];
+    const kept = saved[field];
+    if (!valuesEqual(sent, kept)) {
+      mismatches.push(
+        `${field} (sent ${display(sent)}, server kept ${display(kept)})`
+      );
+    }
+  }
+  return mismatches;
+}
 
 export async function updateClearingPlan(
   id: string,
@@ -111,17 +168,38 @@ export async function updateClearingPlan(
     {
       vendor: write.vendor,
       date_certainty: write.date_certainty,
-      last_cleared_date: nullToUndef(write.last_cleared_date),
-      last_work_done: nullToUndef(write.last_work_done),
-      next_clearing_date: nullToUndef(write.next_clearing_date),
-      planned_year: nullToUndef(write.planned_year),
-      notes: nullToUndef(write.notes),
+      // Cleared optional fields go as explicit null (set to null), not undefined
+      // (leave unchanged) — see `clearable` above. Fixes the prompt-08 bug where
+      // clearing a date silently kept the old value.
+      last_cleared_date: clearable(write.last_cleared_date),
+      last_work_done: clearable(write.last_work_done),
+      next_clearing_date: clearable(write.next_clearing_date),
+      planned_year: clearable(write.planned_year),
+      notes: clearable(write.notes),
       updated_by: write.updated_by,
       updated_at: write.updated_at,
     }
   );
-  const updated = await client.data.ClearingPlan.findById(id);
-  return fromApi(updated as unknown as Record<string, unknown>);
+
+  // Read the full row back and confirm the server kept what we submitted. A
+  // silent mismatch (e.g. a cleared field the API left unchanged) must surface
+  // as an error, not bad data. `findById` only selects the key, so select the
+  // display fields explicitly.
+  const rows = (await client.data.ClearingPlan.select([...FIELDS])
+    .where({ id: { eq: id } })
+    .execute()) as unknown as Record<string, unknown>[];
+  if (rows.length === 0) {
+    throw new Error('Saved feeder could not be read back to confirm the change.');
+  }
+  const saved = fromApi(rows[0]);
+
+  const mismatches = diffSavedRow(write, saved);
+  if (mismatches.length > 0) {
+    throw new Error(
+      `The save did not fully apply — the server kept different values for: ${mismatches.join('; ')}.`
+    );
+  }
+  return saved;
 }
 
 /**
