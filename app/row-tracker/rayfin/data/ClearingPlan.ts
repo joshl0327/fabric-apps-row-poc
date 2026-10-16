@@ -22,7 +22,7 @@ import { entity, authenticated, uuid, text, int, date, set } from '@microsoft/ra
 // uncomment the line below, run `npx rayfin up`, click "Load sample data" in
 // the app, then re-comment it and run `npx rayfin up` again. Leaving create
 // enabled would let any signed-in user insert rows.
-@authenticated('create')
+// @authenticated('create')
 export class ClearingPlan {
   @uuid() id!: string;
 
