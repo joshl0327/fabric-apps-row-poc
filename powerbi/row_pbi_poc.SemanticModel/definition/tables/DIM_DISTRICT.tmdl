@@ -2,7 +2,8 @@ table DIM_DISTRICT
 	lineageTag: f69a3809-6cda-4da5-81b1-0c950daa8dfe
 
 	column DISTRICT_ID
-		dataType: double
+		dataType: int64
+		isHidden
 		lineageTag: e9e0945f-5720-482f-925b-c1fb8f318ea4
 		summarizeBy: none
 		sourceColumn: DISTRICT_ID

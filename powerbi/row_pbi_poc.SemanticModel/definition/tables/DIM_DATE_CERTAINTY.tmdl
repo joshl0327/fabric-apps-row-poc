@@ -6,6 +6,7 @@ table DIM_DATE_CERTAINTY
 		lineageTag: 21ee0d85-ca5c-40ab-8252-1028469dd910
 		summarizeBy: none
 		sourceColumn: DATE_CERTAINTY
+		sortByColumn: SORT_ORDER
 
 		annotation SummarizationSetBy = Automatic
 

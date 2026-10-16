@@ -12,7 +12,7 @@ table DIM_CIRCUIT
 	column CIRCUIT_NUM
 		dataType: double
 		lineageTag: 0f7a33de-711d-4bfb-982b-a09598f54020
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: CIRCUIT_NUM
 
 		annotation SummarizationSetBy = Automatic
@@ -30,7 +30,7 @@ table DIM_CIRCUIT
 	column SUBSTATION_NUM
 		dataType: double
 		lineageTag: 196608d7-3b5e-420d-89a8-fd7f0003ad55
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: SUBSTATION_NUM
 
 		annotation SummarizationSetBy = Automatic
@@ -56,7 +56,8 @@ table DIM_CIRCUIT
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	column RESPONSIBLE_DISTRICT_ID
-		dataType: double
+		dataType: int64
+		isHidden
 		lineageTag: ccfa7b64-846f-4141-966d-86848b095ea6
 		summarizeBy: none
 		sourceColumn: RESPONSIBLE_DISTRICT_ID
@@ -67,6 +68,7 @@ table DIM_CIRCUIT
 
 	column RESPONSIBLE_DISTRICT_NAME
 		dataType: string
+		isHidden
 		lineageTag: 73eb3bc4-816b-4314-b2b8-e204be84bbd0
 		summarizeBy: none
 		sourceColumn: RESPONSIBLE_DISTRICT_NAME
