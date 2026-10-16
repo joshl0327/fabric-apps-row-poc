@@ -1,0 +1,139 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "35300aa704f522b4388c",
+  "position": {
+    "x": 972,
+    "y": 678,
+    "z": 1480,
+    "width": 916,
+    "height": 370,
+    "tabOrder": 1480
+  },
+  "visual": {
+    "visualType": "hundredPercentStackedBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_DISTRICT"
+                    }
+                  },
+                  "Property": "DISTRICT_NAME"
+                }
+              },
+              "queryRef": "DIM_DISTRICT.DISTRICT_NAME",
+              "nativeQueryRef": "DISTRICT_NAME"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "@Measures"
+                    }
+                  },
+                  "Property": "Feeders in Plan"
+                }
+              },
+              "queryRef": "@Measures.Feeders in Plan",
+              "nativeQueryRef": "Feeders in Plan"
+            }
+          ]
+        },
+        "Series": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_DATE_CERTAINTY"
+                    }
+                  },
+                  "Property": "DATE_CERTAINTY"
+                }
+              },
+              "queryRef": "DIM_DATE_CERTAINTY.DATE_CERTAINTY",
+              "nativeQueryRef": "DATE_CERTAINTY"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'District plan firmness by certainty'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#193768'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'District plan firmness by certainty. Bar chart.'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

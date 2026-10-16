@@ -1,0 +1,202 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "fb958f3e5f03ecf5d727",
+  "position": {
+    "x": 972,
+    "y": 284,
+    "z": 1740,
+    "width": 916,
+    "height": 764,
+    "tabOrder": 1740
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "ISSUE_TYPE"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.ISSUE_TYPE",
+              "nativeQueryRef": "ISSUE_TYPE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "SOURCE_COLUMN"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.SOURCE_COLUMN",
+              "nativeQueryRef": "SOURCE_COLUMN"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "RAW_VALUE"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.RAW_VALUE",
+              "nativeQueryRef": "RAW_VALUE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_DQ_ISSUE"
+                    }
+                  },
+                  "Property": "CLEAN_VALUE"
+                }
+              },
+              "queryRef": "FACT_DQ_ISSUE.CLEAN_VALUE",
+              "nativeQueryRef": "CLEAN_VALUE"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'growToFit'"
+                }
+              }
+            },
+            "autoSizeColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#ffffff'"
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#002f6e'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "stylePreset": [
+        {
+          "properties": {
+            "name": {
+              "expr": {
+                "Literal": {
+                  "Value": "'None'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Data-quality issues on this feeder'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#193768'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Data-quality issues on this feeder (table).'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

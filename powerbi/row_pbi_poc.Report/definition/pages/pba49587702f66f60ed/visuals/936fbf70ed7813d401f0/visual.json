@@ -1,0 +1,272 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json",
+  "name": "936fbf70ed7813d401f0",
+  "position": {
+    "x": 32,
+    "y": 332,
+    "z": 1310,
+    "width": 1856,
+    "height": 716,
+    "tabOrder": 1310
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_CIRCUIT"
+                    }
+                  },
+                  "Property": "FEEDER_ID"
+                }
+              },
+              "queryRef": "DIM_CIRCUIT.FEEDER_ID",
+              "nativeQueryRef": "FEEDER_ID"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_CIRCUIT"
+                    }
+                  },
+                  "Property": "CIRCUIT_NAME"
+                }
+              },
+              "queryRef": "DIM_CIRCUIT.CIRCUIT_NAME",
+              "nativeQueryRef": "CIRCUIT_NAME"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_DISTRICT"
+                    }
+                  },
+                  "Property": "DISTRICT_NAME"
+                }
+              },
+              "queryRef": "DIM_DISTRICT.DISTRICT_NAME",
+              "nativeQueryRef": "DISTRICT_NAME"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_VENDOR"
+                    }
+                  },
+                  "Property": "VENDOR_NAME"
+                }
+              },
+              "queryRef": "DIM_VENDOR.VENDOR_NAME",
+              "nativeQueryRef": "VENDOR_NAME"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "LAST_CLEARED_DATE"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.LAST_CLEARED_DATE",
+              "nativeQueryRef": "LAST_CLEARED_DATE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "NEXT_CLEARING_DATE"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.NEXT_CLEARING_DATE",
+              "nativeQueryRef": "NEXT_CLEARING_DATE"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "DIM_DATE_CERTAINTY"
+                    }
+                  },
+                  "Property": "DATE_CERTAINTY"
+                }
+              },
+              "queryRef": "DIM_DATE_CERTAINTY.DATE_CERTAINTY",
+              "nativeQueryRef": "DATE_CERTAINTY"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "@Measures"
+                    }
+                  },
+                  "Property": "Clearing Status"
+                }
+              },
+              "queryRef": "@Measures.Clearing Status",
+              "nativeQueryRef": "Clearing Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FACT_ROW_PLAN"
+                    }
+                  },
+                  "Property": "NOTES"
+                }
+              },
+              "queryRef": "FACT_ROW_PLAN.NOTES",
+              "nativeQueryRef": "NOTES"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'growToFit'"
+                }
+              }
+            },
+            "autoSizeColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#ffffff'"
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#002f6e'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "stylePreset": [
+        {
+          "properties": {
+            "name": {
+              "expr": {
+                "Literal": {
+                  "Value": "'None'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Feeders in the clearing plan'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#193768'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Feeders in the clearing plan (table).'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
