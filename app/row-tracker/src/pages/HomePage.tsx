@@ -10,11 +10,13 @@ import {
   type ClearingPlanRow,
 } from '@/services/clearingPlanModel';
 import {
+  importFeeders,
   listClearingPlans,
   seedFabric,
   updateClearingPlan,
 } from '@/services/clearingPlans';
 import { toUserMessage } from '@/services/errors';
+import type { ImportSummary } from '@/services/import';
 import { isLocalBackend } from '@/services/rayfinClient';
 import {
   hasErrors,
@@ -93,6 +95,15 @@ export function HomePage() {
 
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
         <ClaimsPanel />
+
+        {/* The one-time feeder load (prompt 09). Offered on the Fabric backend;
+            it only succeeds while the gated create permission is enabled. */}
+        {!isLocalBackend() && !loading && (
+          <ImportPanel
+            updatedBy={user?.email ?? user?.id ?? 'unknown'}
+            onImported={fetchRows}
+          />
+        )}
 
         {loading ? (
           <p className="text-center text-sm text-gray-400">Loading…</p>
@@ -348,6 +359,149 @@ function EditForm({
         </button>
       </div>
     </form>
+  );
+}
+
+// Expected reconciliation after a clean load, from docs/measures.md. Shown
+// beside the actual counts so a mismatch is obvious at a glance.
+const EXPECTED = {
+  total: 153,
+  certainty: { confirmed: 142, tentative: 1, 'next year': 2, TBD: 8 },
+  withNextDate: 143,
+} as const;
+
+/** The gated feeder load (prompt 09): pick the Snowflake export CSV, upsert by
+ * feeder_id, and show the result + reconciliation counts. */
+function ImportPanel({
+  updatedBy,
+  onImported,
+}: {
+  updatedBy: string;
+  onImported: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<ImportSummary | null>(null);
+
+  const handleFile = async (file: File) => {
+    setError(null);
+    setSummary(null);
+    setBusy(true);
+    try {
+      const text = await file.text();
+      const result = await importFeeders(text, updatedBy);
+      setSummary(result);
+      await onImported();
+    } catch (err) {
+      setError(toUserMessage(err, 'Failed to import feeders.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white px-6 py-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-900">Import feeders</h2>
+          <p className="text-xs text-gray-500">
+            Load the 153 clean feeders from the Snowflake export CSV. Matches by
+            feeder ID: existing rows are updated, missing ones created.
+          </p>
+        </div>
+        <label className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 aria-disabled:opacity-40">
+          {busy ? 'Importing…' : 'Choose CSV…'}
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            disabled={busy}
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = ''; // allow re-picking the same file
+              if (file) void handleFile(file);
+            }}
+          />
+        </label>
+      </div>
+
+      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+
+      {summary && (
+        <div className="mt-4 space-y-3 text-sm">
+          <p className="font-medium text-gray-900">
+            Created {summary.created} · Updated {summary.updated} · Skipped{' '}
+            {summary.skipped}
+          </p>
+
+          <div className="rounded-lg bg-gray-50 px-4 py-3 text-gray-700">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Reconciliation (actual vs expected)
+            </p>
+            <ul className="space-y-0.5">
+              <Recon label="Feeders in plan" actual={summary.reconciliation.total} expected={EXPECTED.total} />
+              <Recon label="Confirmed" actual={summary.reconciliation.certainty.confirmed} expected={EXPECTED.certainty.confirmed} />
+              <Recon label="Tentative" actual={summary.reconciliation.certainty.tentative} expected={EXPECTED.certainty.tentative} />
+              <Recon label="Next year" actual={summary.reconciliation.certainty['next year']} expected={EXPECTED.certainty['next year']} />
+              <Recon label="TBD" actual={summary.reconciliation.certainty.TBD} expected={EXPECTED.certainty.TBD} />
+              <Recon label="With a next clearing date" actual={summary.reconciliation.withNextDate} expected={EXPECTED.withNextDate} />
+            </ul>
+          </div>
+
+          {summary.errors.length > 0 && (
+            <details className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+              <summary className="cursor-pointer font-medium text-amber-800">
+                {summary.errors.length} row(s) skipped
+              </summary>
+              <ul className="mt-2 space-y-0.5 text-xs text-amber-900">
+                {summary.errors.map((e) => (
+                  <li key={`${e.row}-${e.feeder_id}`}>
+                    Row {e.row} ({e.feeder_id}): {e.reason}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+
+          {summary.leftover.length > 0 && (
+            <details className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+              <summary className="cursor-pointer font-medium text-gray-700">
+                {summary.leftover.length} existing feeder(s) not in the file —
+                reported, not deleted
+              </summary>
+              <p className="mt-2 text-xs text-gray-500">
+                The app has no delete permission; remove these in the Fabric SQL
+                database if they shouldn't be there (see docs/app-notes.md).
+              </p>
+              <p className="mt-1 break-words text-xs text-gray-700">
+                {summary.leftover.join(', ')}
+              </p>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Recon({
+  label,
+  actual,
+  expected,
+}: {
+  label: string;
+  actual: number;
+  expected: number;
+}) {
+  const ok = actual === expected;
+  return (
+    <li className="flex justify-between">
+      <span>{label}</span>
+      <span className={ok ? 'text-gray-900' : 'font-semibold text-red-600'}>
+        {actual}
+        {!ok && <span className="text-gray-400"> / {expected}</span>}
+      </span>
+    </li>
   );
 }
 
