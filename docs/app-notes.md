@@ -84,6 +84,12 @@ and the `docker-local-dev` feature flag).
 
 ## Seeding the Fabric database (gated)
 
+> Superseded for population by **"Loading the 153 feeders (prompt 09)"** below —
+> that's the real load. This section documents the original 15-row seed pattern.
+> Note: as of prompt 09 `@authenticated('create')` is **committed enabled** for
+> the load window (a follow-up PR switches it off), so step 1 below is already
+> done on the current branch.
+
 The deployed app starts **empty** (`read`/`update` only, no create). To load the
 15 sample rows once, after the first deploy:
 
@@ -99,6 +105,73 @@ signed-in user can insert rows. Mitigated by this being a dev-only POC with
 synthetic data and by removing the permission immediately after seeding. The
 clean long-term answer is a seed Function or a per-row create policy, with the
 role rules.
+
+## Loading the 153 feeders (prompt 09)
+
+The real population path, replacing the 15-row seed above: load the 153 clean
+feeders from Snowflake `ROW_DB.ANALYTICS` into the app. Same gated-create
+pattern as the seed, but driven by the **"Import feeders"** control (file
+picker) instead of a fixed button, and it **upserts by `feeder_id`** so running
+it twice gives the same result.
+
+**Load steps (Josh runs these):**
+
+1. **Export** — in Snowsight, run `snowflake/08_app_load_export.sql` as
+   `ROLE_REPORTER`. Download the result grid as CSV into `data/out/`
+   (gitignored). Expect **153 rows**.
+2. **Merge** the reviewed PR (create is enabled in it).
+3. **Deploy** — `npx rayfin up` (Josh; this PR has `@authenticated('create')`
+   on).
+4. **Import** — sign in, and in the "Import feeders" panel choose the CSV. The
+   result summary shows created / updated / skipped and the reconciliation.
+5. **Check counts** against the panel (below).
+6. **Clean up** the 13 leftover seed rows (SQL below).
+7. **Follow-up PR** re-comments `@authenticated('create')`; Josh deploys again
+   to lock creates back down.
+
+**Expected result (from the 15 current seed rows):**
+
+| Metric | Expected |
+|---|---|
+| Source rows | 153 |
+| Created | 151 |
+| Updated | 2 (214-1, 328-4 — the only seed ids in the 153; 328-4's district is corrected Cedar Valley → Pine Hollow) |
+| Skipped | 0 |
+| Feeders in plan | 153 |
+| Certainty: confirmed / tentative / next year / TBD | 142 / 1 / 2 / 8 |
+| With a next clearing date | 143 |
+| Leftover (reported, not deleted) | 13 |
+
+These match `docs/measures.md` after the prompt-09 cleaning-rule change
+(`Feeders TBD` 5→8). The Import panel shows each count beside its expected value
+and flags any mismatch in red.
+
+**Cleaning up the 13 leftover seed rows (one-time, manual).** The app has no
+delete permission (none is added), so removing the seed feeders that aren't in
+the 153 is a one-time statement in the **Fabric SQL database query editor**
+(T-SQL), run once after the load. Confirm first with a `SELECT`, then delete the
+exact `feeder_id`s the import summary lists as leftover — expected to be these
+13 (the 15 seed ids minus 214-1 and 328-4):
+
+```sql
+-- Confirm first (expect 13 rows):
+SELECT feeder_id FROM dbo.ClearingPlans
+WHERE feeder_id IN (
+  '101-1','118-2','203-1','227-3','245-2','316-1',
+  '402-2','417-1','533-1','548-3','619-2','701-1','742-2'
+);
+
+-- Then delete:
+DELETE FROM dbo.ClearingPlans
+WHERE feeder_id IN (
+  '101-1','118-2','203-1','227-3','245-2','316-1',
+  '402-2','417-1','533-1','548-3','619-2','701-1','742-2'
+);
+```
+
+After cleanup the table holds exactly the 153 feeders. (If any seed row was
+hand-edited to a different `feeder_id` while testing, trust the import summary's
+leftover list over this fixed set.)
 
 ## Deployed results (2026-10-16)
 
