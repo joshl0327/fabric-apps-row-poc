@@ -14,7 +14,7 @@ Snowflake (`ROW_DB.STAGING`). The rules live in SQL
 | **Feeder not in the circuit list** | Can't be matched to a real circuit — left out of the clean plan and sent to review. | `765-3` (no such circuit) → review |
 | **Real date typed as text** | Read the date; mark it **confirmed**. | `2024-05-09`, `12-19-2028 ` → `2028-12-19` |
 | **"Next Year"** | Next year relative to the as-of date; mark **next year**, no exact date yet. | `Next Year` → planned year **2027** |
-| **Quarter / season / "year?"** | No exact date; mark **tentative** and keep the planned year. | `Q3 2027`, `Spring 2027`, `2027?` → tentative, year **2027** |
+| **Quarter / season / "year?"** | A year is known but no exact date; mark **TBD** and keep the planned year. (Was tentative; changed so **tentative** always carries a real date, matching the app's form rule — see `docs/decisions.md`, 2026-10-16.) | `Q3 2027`, `Spring 2027`, `2027?` → TBD, year **2027** |
 | **Date with a "TBD" note** | Recover the date but mark it **tentative** (not yet firm). | `10/20/2027 - TBD` → `2027-10-20`, tentative |
 | **Blank / "per vendor" / other text** | No date; mark **TBD**. | `per vendor`, `TBD`, *(blank)* → TBD |
 | **Last Cleared text** | Keep a real date if one can be read; otherwise leave it empty. | `Q3 2027` → *(empty)* · `2024-01-29` → `2024-01-29` |
@@ -23,8 +23,11 @@ Snowflake (`ROW_DB.STAGING`). The rules live in SQL
 | **Vendor we can't match** | Left null and sent to review (never guessed). | *(unrecognized)* → review |
 | **Blank vendor** | Left empty in STAGING and logged as a data quality issue. (The ANALYTICS `DIM_VENDOR` later labels these feeders "Unassigned" for the report — see `docs/data-model.md`.) | *(blank)* → *(empty)* → report shows **Unassigned** |
 
-**Date certainty** is one of: `confirmed` (a real date), `tentative` (a date or
-year we're not sure of), `next year`, or `TBD` (unknown).
+**Date certainty** is one of: `confirmed` (a real date), `tentative` (a real
+date we're not fully sure of, e.g. a date carrying a "TBD" note), `next year`,
+or `TBD` (no exact date — blank, unmatchable text, or a known year/quarter with
+no day). Every `confirmed` and `tentative` feeder carries a real date; a known
+year with no date is `TBD` (planned year kept) or `next year`.
 
 Anything the rules can't settle on their own — orphan feeders, an unmatchable
 vendor, or duplicate rows that disagree — lands in `STAGING.STG_DQ_REVIEW` for a

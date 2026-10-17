@@ -181,9 +181,14 @@ def nondate_pool(year: int) -> list[tuple[str, str, object]]:
         ("Next Year", "next year", year),
         ("TBD", "TBD", ""),
         ("per vendor", "TBD", ""),
-        (f"Q3 {year}", "tentative", year),
-        (f"Spring {year}", "tentative", year),
-        (f"{year}?", "tentative", year),
+        # Quarter / season / "year?": a year is known but no exact date. Cleaned
+        # to TBD (not tentative) so "tentative" always carries a real date — the
+        # app's edit form requires a date for confirmed/tentative, and the report
+        # and app must agree. The planned year is still recovered. See
+        # docs/cleaning-rules.md and docs/decisions.md (2026-10-16).
+        (f"Q3 {year}", "TBD", year),
+        (f"Spring {year}", "TBD", year),
+        (f"{year}?", "TBD", year),
         (f"10/20/{year} - TBD", "tentative", year),  # embedded date, still tentative
     ]
 
