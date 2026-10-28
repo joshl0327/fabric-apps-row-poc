@@ -15,7 +15,7 @@ since) move with the real date. Checked against the R1 profile in
 | 10 - Plan | Line Miles in Plan | Line miles of the feeders in the plan, each feeder counted once; responds to vendor and certainty filters. | `#,0.0` | 4,634.7 (= `SUM(DIM_CIRCUIT[LINE_MILES])`) |
 | 10 - Plan | % Plan Date Confirmed | Feeders with certainty "confirmed" ÷ Feeders in Plan. | `0.0%` | 92.8% (142 / 153) |
 | 10 - Plan | Feeders Next Year | Feeders with certainty "next year". | `#,0` | 2 |
-| 10 - Plan | Feeders TBD | Feeders with certainty "TBD". | `#,0` | 5 |
+| 10 - Plan | Feeders TBD | Feeders with certainty "TBD". | `#,0` | 8 |
 | 20 - Clearing Cycle | Feeders Overdue | Feeders with a real next-clearing date (confirmed or tentative, not blank) before today. | `#,0` | 14 |
 | 20 - Clearing Cycle | Line Miles Overdue | Line miles on the overdue feeders (same rule as Feeders Overdue). | `#,0.0` | 522.9 |
 | 20 - Clearing Cycle | Feeders Due Soon | Feeders whose next-clearing date falls from today through today + 90 days. | `#,0` | 10 |
@@ -37,10 +37,14 @@ since) move with the real date. Checked against the R1 profile in
   Feeders/Line Miles Overdue explicitly require `NOT ISBLANK(NEXT_CLEARING_DATE)`
   on top of the confirmed/tentative certainty filter (there are confirmed/
   tentative feeders with no date; 143 of 153 feeders carry a next-clearing date).
-- **Certainty mix (after prompt 06 data refresh):** confirmed 142, tentative 4,
-  next year 2, TBD 5 (= 153). 143 feeders carry a next-clearing date — the
-  `10/20/<year> - TBD` pattern now appears in Next Clearing and recovers one
-  tentative date.
+- **Certainty mix (after the prompt 09 cleaning-rule change):** confirmed 142,
+  tentative 1, next year 2, TBD 8 (= 153). 143 feeders carry a next-clearing
+  date. The quarter/season/"year?" feeders (858-3, 658-6, 189-6) moved from
+  tentative to **TBD** (planned year kept) so every confirmed/tentative feeder
+  carries a real date and the report agrees with the app's form rule; the only
+  tentative left is the one `10/20/<year> - TBD` feeder (704-2), which keeps its
+  recovered date. Was tentative 4 / TBD 5 before the change. See
+  `docs/decisions.md` (2026-10-16).
 - **Base-measure reuse:** the percentage, overdue, due-soon and vendor measures
   all build on `Feeders in Plan` / `Line Miles in Plan` so a definition is
   written once.

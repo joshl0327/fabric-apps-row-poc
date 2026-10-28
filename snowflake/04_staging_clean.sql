@@ -150,7 +150,7 @@ QUALIFY ROW_NUMBER() OVER (PARTITION BY raw_vendor ORDER BY method_rank, edit_di
 --      text, parseable  -> that date, confirmed            (date_format)
 --      text, "d - TBD"  -> recovered date, tentative       (non_date)
 --      text, "Next Year"-> no date, next year, planned = as-of year + 1
---      text w/ a year   -> no date, tentative, that year   (quarter/season/"?")
+--      text w/ a year   -> no date, TBD, that year kept    (quarter/season/"?")
 --      anything else    -> no date, TBD                    (non_date)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW ROW_DB.STAGING.STG_PLAN_RESOLVED AS
@@ -218,7 +218,10 @@ SELECT
       TRY_TO_DATE(TRIM(raw_last_cleared), 'MM/DD/YY')) IS NOT NULL THEN 'confirmed'
     WHEN TRY_TO_DATE(REGEXP_SUBSTR(TRIM(raw_last_cleared), '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}'), 'MM/DD/YYYY') IS NOT NULL THEN 'tentative'
     WHEN LOWER(TRIM(raw_last_cleared)) LIKE '%next year%' THEN 'next year'
-    WHEN REGEXP_SUBSTR(TRIM(raw_last_cleared), '(19|20)[0-9]{2}') IS NOT NULL THEN 'tentative'
+    -- A year with no recoverable date (quarter/season/"year?") -> TBD, not
+    -- tentative, so "tentative" always carries a real date. The planned year is
+    -- still kept below. See docs/cleaning-rules.md + docs/decisions.md.
+    WHEN REGEXP_SUBSTR(TRIM(raw_last_cleared), '(19|20)[0-9]{2}') IS NOT NULL THEN 'TBD'
     ELSE 'TBD'
   END AS last_cleared_certainty,
   CASE
@@ -272,7 +275,11 @@ SELECT
       TRY_TO_DATE(TRIM(raw_next_clearing), 'MM/DD/YY')) IS NOT NULL THEN 'confirmed'
     WHEN TRY_TO_DATE(REGEXP_SUBSTR(TRIM(raw_next_clearing), '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}'), 'MM/DD/YYYY') IS NOT NULL THEN 'tentative'
     WHEN LOWER(TRIM(raw_next_clearing)) LIKE '%next year%' THEN 'next year'
-    WHEN REGEXP_SUBSTR(TRIM(raw_next_clearing), '(19|20)[0-9]{2}') IS NOT NULL THEN 'tentative'
+    -- A year with no recoverable date (quarter/season/"year?") -> TBD, not
+    -- tentative, so "tentative" always carries a real date (the app's form
+    -- requires a date for confirmed/tentative). The planned year is still kept
+    -- below. See docs/cleaning-rules.md + docs/decisions.md.
+    WHEN REGEXP_SUBSTR(TRIM(raw_next_clearing), '(19|20)[0-9]{2}') IS NOT NULL THEN 'TBD'
     ELSE 'TBD'
   END AS next_clearing_certainty,
   CASE

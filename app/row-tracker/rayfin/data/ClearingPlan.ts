@@ -17,12 +17,13 @@ import { entity, authenticated, uuid, text, int, date, set } from '@microsoft/ra
 @entity()
 @authenticated('read')
 @authenticated('update')
-// Seeding the Fabric database (see docs/app-notes.md + docs/decisions.md):
-// the deployed app starts empty. To load the 15 sample rows once, temporarily
-// uncomment the line below, run `npx rayfin up`, click "Load sample data" in
-// the app, then re-comment it and run `npx rayfin up` again. Leaving create
-// enabled would let any signed-in user insert rows.
-// @authenticated('create')
+// CREATE IS TEMPORARILY ENABLED for the one-time feeder load (prompt 09): the
+// "Import feeders" control upserts the 153 clean feeders from the Snowflake
+// export. A FOLLOW-UP PR SWITCHES THIS BACK OFF (re-comment the line) and
+// redeploys, the same gated pattern as the seed. While it is on, any signed-in
+// user can insert rows — mitigated by dev-only synthetic data and the immediate
+// removal. See docs/app-notes.md + docs/decisions.md.
+@authenticated('create')
 export class ClearingPlan {
   @uuid() id!: string;
 
