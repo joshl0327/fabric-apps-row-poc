@@ -23,7 +23,7 @@ import { entity, authenticated, uuid, text, int, date, set } from '@microsoft/ra
 // redeploys, the same gated pattern as the seed. While it is on, any signed-in
 // user can insert rows — mitigated by dev-only synthetic data and the immediate
 // removal. See docs/app-notes.md + docs/decisions.md.
-@authenticated('create')
+// @authenticated('create')
 export class ClearingPlan {
   @uuid() id!: string;
 
