@@ -12,7 +12,7 @@ since) move with the real date. Checked against the R1 profile in
 | Folder | Measure | Plain-English definition | Format | Checked result |
 |---|---|---|---|---|
 | 10 - Plan | Feeders in Plan | Distinct feeders that have a plan row in the current filter context. | `#,0` | 153 |
-| 10 - Plan | Line Miles in Plan | Line miles of the feeders in the plan, each feeder counted once; responds to vendor and certainty filters. | `#,0.0` | 4,634.7 (= `SUM(DIM_CIRCUIT[LINE_MILES])`) |
+| 10 - Plan | Line Miles in Plan | Line miles of the feeders in the plan, each feeder counted once; responds to vendor and certainty filters. | `#,0.0` | 4,634.7 (= `SUM(DIM_CIRCUIT[LINE_MILES])`) — rewritten with `TREATAS` for the composite model, see note below |
 | 10 - Plan | % Plan Date Confirmed | Feeders with certainty "confirmed" ÷ Feeders in Plan. | `0.0%` | 92.8% (142 / 153) |
 | 10 - Plan | Feeders Next Year | Feeders with certainty "next year". | `#,0` | 2 |
 | 10 - Plan | Feeders TBD | Feeders with certainty "TBD". | `#,0` | 8 |
@@ -50,3 +50,17 @@ since) move with the real date. Checked against the R1 profile in
   written once.
 - `DIM_CIRCUIT[LINE_MILES]` set to **don't summarize** so it is never implicitly
   summed on a visual; line miles always go through the measures.
+- **Composite-model rewrite (prompt 11, 2026-10-28).** After `FACT_ROW_PLAN`
+  moved to DirectQuery (Fabric app DB) while the dimensions stayed Import, the
+  `FACT_ROW_PLAN → DIM_CIRCUIT` relationship became **limited (cross-source)**,
+  and `RELATED()` can't cross it. `Line Miles in Plan` was changed from
+  `SUMX(FACT_ROW_PLAN, RELATED(DIM_CIRCUIT[LINE_MILES]))` to
+  `CALCULATE(SUM(DIM_CIRCUIT[LINE_MILES]), TREATAS(VALUES(FACT_ROW_PLAN[FEEDER_ID]), DIM_CIRCUIT[FEEDER_ID]))`.
+  Same value (4,634.7 unfiltered = `SUM(DIM_CIRCUIT[LINE_MILES])`), still counts
+  each feeder once and still responds to vendor/certainty filters (verified by
+  the vendor split: Unassigned 168.1, total reconciles to 4,634.7).
+  `Line Miles Overdue` and `Line Miles by Vendor` reference this base measure
+  and needed no change. All 15 measures re-validated on the DirectQuery source;
+  every result matches the figures above (re-run 2026-10-28:
+  Feeders in Plan 153, confirmed 142 / tentative 1 / next year 2 / TBD 8,
+  143 with a next date, DQ 69, Orphans 2 — unchanged).
