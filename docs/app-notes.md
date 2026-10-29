@@ -298,6 +298,60 @@ the DoD does.)
   `updated_by`. Pinning `updated_by` with an update policy was deliberately
   deferred (see Open questions / prompt 11).
 
+## Report reads the app (Phase 4, trimmed — prompt 11, 2026-10-28)
+
+The Power BI report's `FACT_ROW_PLAN` table now reads the app's **own Fabric SQL
+database** (`dbo.ClearingPlans`) in **DirectQuery**, instead of Import from
+Snowflake `ANALYTICS`. This demonstrates the live loop — *edit a feeder in the
+Fabric App → see it in the Power BI report* — in Power BI Desktop. Every other
+table stays Import from Snowflake, so the semantic model is now **composite**.
+The full model-side detail is in `docs/data-model.md`; in short: two new Power
+Query parameters (`App_SQL_Server`, `App_SQL_Database`), a DirectQuery native
+`SELECT` that aliases the app's lower-case columns to the model's UPPERCASE
+names and `CAST`s the two `datetime2` dates to `date`, the vendor join moved to
+`VENDOR_NAME` (the app stores the name, not an id), `DQ_ISSUE_COUNT` dropped, and
+`Line Miles in Plan` rewritten with `TREATAS` (the limited cross-source
+relationship breaks `RELATED()`). Nothing was created or altered in the app's
+database; the report only reads it.
+
+### Hand test: edit in the app, see it in the report
+
+To show the loop end to end (Josh runs this against the deployed app):
+
+1. In Power BI Desktop, open the **Clearing Plan** page and note a named
+   feeder's row — e.g. find a **Scheduled** feeder and remember its **Next
+   clearing** date and **Vendor**.
+2. In the **deployed Fabric App**, sign in and edit that same feeder: change its
+   **Next clearing date** (e.g. move it earlier so it becomes **Overdue**, or
+   change the **Vendor**). Save; confirm the edit succeeded (and that a
+   `ChangeLog` row was written).
+3. Back in Desktop, refresh just that visual (or the page). Because
+   `FACT_ROW_PLAN` is **DirectQuery**, no full model refresh is needed — the
+   visual re-queries the app database. **Time how long** from the app save until
+   the report shows the new value.
+4. Confirm the **Clearing Status** / KPIs move as expected (e.g. Feeders Overdue
+   +1, or the vendor split shifts). Record the latency and anything surprising.
+
+Expected: the change appears on the next visual refresh (seconds, network- and
+capacity-dependent), with no republish and no Snowflake involvement.
+
+### Design note: publishing and Snowflake sync (out of scope)
+
+Two things were deliberately **left out** of this trimmed phase and remain design
+notes only:
+
+- **Publishing the report.** The composite report runs in Desktop only. A
+  published version would need the dataset's DirectQuery source (the Fabric SQL
+  DB) reachable with a gateway/credentials in the service — not set up here, and
+  publishing is gated by AGENTS.md anyway.
+- **Syncing the app's data back to Snowflake (`APP_SYNC`).** The original Phase 4
+  design routed app edits into Snowflake `APP_SYNC` and kept the report on
+  Snowflake. This trimmed version points the report straight at the app DB
+  instead, so there is **no** app→Snowflake pipeline. If the analytics layer
+  should stay the system of record later, add an `APP_SYNC` write path (a Rayfin
+  Function or a scheduled copy) and switch `FACT_ROW_PLAN` back to Import from
+  `ANALYTICS` — the downstream model and report would stay put.
+
 ## Open questions
 
 - **Entra groups / roles** (Finding 2): the deployed claims panel shows only

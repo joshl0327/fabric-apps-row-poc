@@ -16,3 +16,21 @@ expression WH =
 
 	annotation PBI_ResultType = Text
 
+expression App_SQL_Server =
+		let
+		    Source = "aamwmf5kappu5cb5sdfmnrhns4-55cuhftk7t3ernmkkh7w2xla5e.database.fabric.microsoft.com" meta [IsParameterQuery = true, IsParameterQueryRequired = false, Type = type any]
+		in
+		    Source
+	lineageTag: 2c3c9ffe-9996-4390-a402-3cba3ae3e7d1
+
+	annotation PBI_ResultType = Text
+
+expression App_SQL_Database =
+		let
+		    Source = "row-tracker-b20ebf8c-cc8b-4a5d-8a85-4a92b359da7e" meta [IsParameterQuery = true, IsParameterQueryRequired = false, Type = type any]
+		in
+		    Source
+	lineageTag: 777faf16-bdbe-4c22-a82a-fc3ff2c018b3
+
+	annotation PBI_ResultType = Text
+

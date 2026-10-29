@@ -2,6 +2,8 @@
 // Run against the live Desktop model through the Power BI Authoring MCP server.
 // Recorded results are at "Today" = 2026-10-16 (measures use TODAY(), so
 // overdue / due-soon / years-since figures shift as the real date moves).
+// Non-date-relative results re-validated 2026-10-28 after FACT_ROW_PLAN moved
+// to DirectQuery against the app's Fabric SQL DB (prompt 11) — all unchanged.
 // Read-only: these queries only read the model.
 
 // ---------------------------------------------------------------------------
@@ -32,7 +34,8 @@ EVALUATE ROW ( "Feeders Next Year", [Feeders Next Year] )
 
 // Feeders TBD — certainty "TBD".
 EVALUATE ROW ( "Feeders TBD", [Feeders TBD] )
-// RESULT: 5  (was 7; 2 feeders moved from TBD to "next year")
+// RESULT: 8  (after the prompt-09 cleaning-rule change: quarter/season/"year?"
+// dates clean to TBD; was 5)
 
 // ---------------------------------------------------------------------------
 // 20 - Clearing Cycle
@@ -105,10 +108,8 @@ ROW (
     "Feeders with next date (=143)", CALCULATE ( [Feeders in Plan], NOT ISBLANK ( FACT_ROW_PLAN[NEXT_CLEARING_DATE] ) ),
     "Overdue + Due Soon (<=143)", [Feeders Overdue] + [Feeders Due Soon]
 )
-// RESULT: 153, 153, 143, 24 — all checks pass (confirmed 142 + tentative 4
-// + next year 2 + TBD 5 = 153; 24 <= 143). Feeders with a next date is 143
-// (was 142): the "10/20/<year> - TBD" pattern now appears in Next Clearing and
-// recovers one tentative date.
+// RESULT: 153, 153, 143, 24 — all checks pass (confirmed 142 + tentative 1
+// + next year 2 + TBD 8 = 153; 24 <= 143). Feeders with a next date is 143.
 
 // ---------------------------------------------------------------------------
 // 90 - Helpers (report-support measures added in R4/Part C)

@@ -10,17 +10,6 @@ table FACT_ROW_PLAN
 
 		annotation SummarizationSetBy = Automatic
 
-	column VENDOR_ID
-		dataType: int64
-		isHidden
-		lineageTag: 5c0af353-e899-4a69-8673-8901a89f1a03
-		summarizeBy: none
-		sourceColumn: VENDOR_ID
-
-		annotation SummarizationSetBy = Automatic
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
-
 	column LAST_CLEARED_DATE
 		dataType: dateTime
 		formatString: Long Date
@@ -78,28 +67,20 @@ table FACT_ROW_PLAN
 
 		annotation SummarizationSetBy = Automatic
 
-	column DQ_ISSUE_COUNT
-		dataType: double
+	column VENDOR_NAME
+		dataType: string
 		isHidden
-		lineageTag: a815becd-5849-42b9-808d-ade4102f2447
+		lineageTag: 009420c0-7f0c-4fba-9fab-4ba75359effc
 		summarizeBy: none
-		sourceColumn: DQ_ISSUE_COUNT
-
-		annotation SummarizationSetBy = Automatic
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
+		sourceColumn: VENDOR_NAME
 
 	partition FACT_ROW_PLAN = m
-		mode: import
+		mode: directQuery
 		source =
 				let
-				    Source = Snowflake.Databases(Snowflake_Server,WH,[Implementation="2.0"]),
-				    ROW_DB_Database = Source{[Name="ROW_DB",Kind="Database"]}[Data],
-				    ANALYTICS_Schema = ROW_DB_Database{[Name="ANALYTICS",Kind="Schema"]}[Data],
-				    FACT_ROW_PLAN_View = ANALYTICS_Schema{[Name="FACT_ROW_PLAN",Kind="View"]}[Data],
-				    #"Changed Type" = Table.TransformColumnTypes(FACT_ROW_PLAN_View,{{"VENDOR_ID", Int64.Type}, {"PLANNED_YEAR", Int64.Type}})
+				    Source = Sql.Database(App_SQL_Server, App_SQL_Database, [Query="SELECT feeder_id AS FEEDER_ID, vendor AS VENDOR_NAME, CAST(last_cleared_date AS date) AS LAST_CLEARED_DATE, last_work_done AS LAST_WORK_DONE, CAST(next_clearing_date AS date) AS NEXT_CLEARING_DATE, date_certainty AS DATE_CERTAINTY, planned_year AS PLANNED_YEAR, notes AS NOTES FROM dbo.ClearingPlans"])
 				in
-				    #"Changed Type"
+				    Source
 
 	annotation PBI_ResultType = Table
 
