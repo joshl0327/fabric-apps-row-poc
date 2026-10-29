@@ -56,8 +56,12 @@ seed). There is **no row-level policy yet**: the per-district / per-group rules
 are a later step. This is deliberately coarse for the thin slice.
 
 `updated_by` is set by the client from the signed-in session. It is **not
-audit-grade** — a client controls the value it sends. The change-log step will
-replace it with a server-stamped field. `updated_at` is a datetime (`@date`).
+audit-grade** — a client controls the value it sends. The change-log step
+(prompt 10) did **not** replace it; instead it added the append-only `ChangeLog`
+whose `changed_by` **is** server-pinned (to `claims.email`), so the trustworthy
+record of who changed a feeder is the `ChangeLog`, not `updated_by`. See
+"Change log (audit trail, prompt 10)" below. `updated_at` is a datetime
+(`@date`).
 
 ## How to run it locally (no Fabric)
 
@@ -221,6 +225,79 @@ data that broke our own cross-field rule.
    plain message; the full error still goes to the browser console
    (`src/services/errors.ts`, `toUserMessage`).
 
+## Change log (audit trail, prompt 10)
+
+The second half of Phase 3's exit test — "every edit produces an audit row" —
+an **append-only** log of who changed what and when, that no user can edit or
+delete.
+
+### How it works
+
+| Layer | File(s) | What it does |
+|---|---|---|
+| Entity | `rayfin/data/ChangeLog.ts`, `rayfin/data/schema.ts` | One row per saved change: `feeder_id`, `action`, `changed_by`, `changed_at`, `before_json`, `after_json`, optional `reason`. **read + create only** (see permissions). |
+| Types | `src/services/changeLogModel.ts` | The logged fields, friendly labels, and the `ChangeLogRow` / `FieldChange` shapes. |
+| Service | `src/services/changeLog.ts` | `diffFeeder` (changed-fields diff), `buildChangeLogWrite`, `logFeederUpdate` (orchestrates the write), `listFeederHistory`, `listRecentChanges`. In-memory in local mode; typed Rayfin client against Fabric. |
+| UI | `src/pages/HomePage.tsx` | A **History** block in each feeder's edit view (newest first: when, who, field `old → new`, reason) and a **Recent changes** panel (last 20 across all feeders). An optional **Reason for change** input. Plain React + Tailwind; no new library. |
+| Flag | `src/services/featureFlags.ts`, `src/vite-env.d.ts` | `isFeederImportEnabled()` — the Import panel is hidden unless built with `VITE_ENABLE_FEEDER_IMPORT=true`. |
+
+**Write sequence.** On save: `updateClearingPlan` saves and read-backs the
+server-verified row (prompt 08). Then `logFeederUpdate(before, saved, …)` diffs
+the two, keeps only the fields that changed (a cleared value recorded as
+`null`), and writes one `ChangeLog` row holding just those fields. An unchanged
+save writes nothing.
+
+**Who is trustworthy.** `changed_by` is the signed-in **email**, and a create
+policy pins it server-side: `@authenticated('create', { policy: (c,i) =>
+c.email.eq(i.changed_by) })`, which DAB compiles to
+`@claims.email eq @item.changed_by`. A row whose `changed_by` ≠ the caller's
+email is rejected by the API — the browser cannot forge the author.
+
+### Proving it is append-only
+
+`ChangeLog` carries **no `update` and no `delete` decorator**. DAB only exposes
+a GraphQL mutation for an action some role grants (the same reason the
+create-disabled seed earlier failed with "`createClearingPlan` does not exist on
+the type `Mutation`"), so there is no `updateChangeLog` / `deleteChangeLog`
+operation at all. The generated client *types* expose `.update`/`.delete` on
+every entity regardless of grants, so they can't prove it — the **DAB config**
+(which drives the GraphQL schema) is the authoritative artifact.
+
+`src/__tests__/changeLogPermissions.test.ts` proves it **offline, no deploy**:
+it runs the core `SchemaAnalyzer` + `ConfigGenerator` over the real decorators
+in-memory and asserts `ChangeLog` grants only `create` (with the email policy) +
+`read`. The generated permissions block:
+
+```json
+{ "role": "authenticated",
+  "actions": [ { "action": "create",
+                 "policy": { "database": "@claims.email eq @item.changed_by" } },
+               "read" ] }
+```
+
+(The test reads the entities from the `tsc`-compiled output under
+`rayfin/.temp/compiled/`, because the Stage-3 decorators in `rayfin/data/*.ts`
+aren't parsed by the test runner's swc transform; run `npm run build` first, as
+the DoD does.)
+
+### Known gaps
+
+- **Two writes, not one transaction.** Save and log are separate API calls. If
+  the save succeeds but the log write fails — or there is **no email** on the
+  session to attribute the change to (no `'unknown'` fallback for `changed_by`)
+  — the edit is kept and a distinct **"saved but not logged"** warning is shown,
+  never hidden. Making both atomic needs a server-side Rayfin **Function** on
+  write (same place as the cross-field enforcement in Finding 1).
+- **`changed_at` is set by the browser.** The decorator surface has no
+  server-set / auto-now timestamp (`default` is a static literal only). A
+  server-stamped time also needs a Function.
+- **The import is not logged.** The 153-feeder load is the baseline, not an
+  edit.
+- **`ClearingPlan.updated_by` is still client-set** and not audit-grade. The
+  trustworthy record of who changed a feeder is the `ChangeLog`, not
+  `updated_by`. Pinning `updated_by` with an update policy was deliberately
+  deferred (see Open questions / prompt 11).
+
 ## Open questions
 
 - **Entra groups / roles** (Finding 2): the deployed claims panel shows only
@@ -228,9 +305,19 @@ data that broke our own cross-field rule.
   (mapped `role` claim, lookup table, or a Function).
 - **Server-side cross-field enforcement** (Finding 1): add a Rayfin Function on
   write. The read-back guard catches an inconsistent save after the fact, but
-  the rules are still only enforced client-side.
+  the rules are still only enforced client-side. The same Function would make
+  the feeder save + change-log write atomic and server-stamp `changed_at`.
 - **Clear-to-null on Fabric: resolved.** The client does support clearing via an
   explicit `null` (see "Deployed results" above). A Rayfin Function is no longer
   required for this; it stays on the list only for cross-field enforcement.
-- **Audit fields:** replace client-set `updated_by` with a server-stamped value
-  in the change-log step.
+- **`ClearingPlan` update policy (prompt 11 / role rules):** decide whether to
+  pin `updated_by` with `@authenticated('update', { policy: (c,i) =>
+  c.email.eq(i.updated_by) })`. Deferred from prompt 10 because, with one user,
+  we can't tell whether DAB evaluates an update policy's `@item` against the
+  submitted payload (what we want) or the stored pre-image (which would lock a
+  user out of rows last edited by someone else). Confirm with a two-user test
+  after deploy. The `ChangeLog` **create** policy is unambiguous and already
+  applied.
+- **Audit fields: addressed** by the change-log step. `ChangeLog.changed_by` is
+  server-pinned to the caller's email. `ClearingPlan.updated_by` stays client-set
+  (not audit-grade) — the `ChangeLog` is the trustworthy record.
