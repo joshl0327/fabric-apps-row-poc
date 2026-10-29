@@ -279,7 +279,7 @@
               {
                 "textRuns": [
                   {
-                    "value": "“Today” is TODAY(). Data source: Snowflake ROW_DB.ANALYTICS (Import). Refresh: manual (static synthetic data for the POC).",
+                    "value": "“Today” is TODAY(). Data source: FACT_ROW_PLAN reads the Fabric App's SQL database (DirectQuery); all other tables read Snowflake ROW_DB.ANALYTICS (Import). Refresh: manual (static synthetic data for the POC).",
                     "textStyle": {
                       "fontFamily": "Arial",
                       "fontSize": "13px",

@@ -6,10 +6,6 @@ relationship AutoDetected_5477517d-5421-4a0b-88a8-98ed55e73f11
 	fromColumn: FACT_ROW_PLAN.DATE_CERTAINTY
 	toColumn: DIM_DATE_CERTAINTY.DATE_CERTAINTY
 
-relationship AutoDetected_cf30690a-e070-4a11-86db-bd90204b5c82
-	fromColumn: FACT_ROW_PLAN.VENDOR_ID
-	toColumn: DIM_VENDOR.VENDOR_ID
-
 relationship f66dec6d-bfe9-eeec-0683-0d8b41c2125c
 	fromColumn: DIM_CIRCUIT.RESPONSIBLE_DISTRICT_ID
 	toColumn: DIM_DISTRICT.DISTRICT_ID
@@ -26,4 +22,8 @@ relationship FACT_ROW_PLAN_LAST_CLEARED_DATE_to_DIM_DATE
 	isActive: false
 	fromColumn: FACT_ROW_PLAN.LAST_CLEARED_DATE
 	toColumn: DIM_DATE.Date
+
+relationship FACT_ROW_PLAN_VENDOR_NAME_to_DIM_VENDOR
+	fromColumn: FACT_ROW_PLAN.VENDOR_NAME
+	toColumn: DIM_VENDOR.VENDOR_NAME
 

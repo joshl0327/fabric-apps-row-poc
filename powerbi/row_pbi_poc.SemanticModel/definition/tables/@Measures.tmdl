@@ -12,8 +12,12 @@ table @Measures
 		displayFolder: 10 - Plan
 		lineageTag: e0b37b4b-9e18-4b6e-a237-cf8b682453fe
 
-	/// Line miles of the feeders in the plan, each feeder counted once (grain is one row per feeder). Responds to vendor and date-certainty filters. Base measure.
-	measure 'Line Miles in Plan' = SUMX ( FACT_ROW_PLAN, RELATED ( DIM_CIRCUIT[LINE_MILES] ) )
+	/// Line miles of the feeders in the plan, each feeder counted once (grain is one row per feeder). Responds to vendor and date-certainty filters. Base measure. Uses TREATAS instead of RELATED because FACT_ROW_PLAN (DirectQuery) to DIM_CIRCUIT (Import) is a limited cross-source relationship.
+	measure 'Line Miles in Plan' =
+			CALCULATE (
+			    SUM ( DIM_CIRCUIT[LINE_MILES] ),
+			    TREATAS ( VALUES ( FACT_ROW_PLAN[FEEDER_ID] ), DIM_CIRCUIT[FEEDER_ID] )
+			)
 		formatString: #,0.0
 		displayFolder: 10 - Plan
 		lineageTag: 996e97b6-4d63-41c3-a5af-582a6b703362
