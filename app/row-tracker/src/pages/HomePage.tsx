@@ -3,6 +3,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { ClaimsPanel } from '@/components/ClaimsPanel';
 import { useAuth } from '@/hooks/AuthContext';
 import {
+  listFeederHistory,
+  listRecentChanges,
+  logFeederUpdate,
+} from '@/services/changeLog';
+import {
+  FIELD_LABELS,
+  type ChangeLogRow,
+  type FieldChange,
+} from '@/services/changeLogModel';
+import {
   DATE_CERTAINTIES,
   NOTES_MAX,
   VENDORS,
@@ -16,6 +26,7 @@ import {
   updateClearingPlan,
 } from '@/services/clearingPlans';
 import { toUserMessage } from '@/services/errors';
+import { isFeederImportEnabled } from '@/services/featureFlags';
 import type { ImportSummary } from '@/services/import';
 import { isLocalBackend } from '@/services/rayfinClient';
 import {
@@ -23,6 +34,10 @@ import {
   validateClearingPlan,
   type ClearingPlanErrors,
 } from '@/services/validation';
+
+/** Reason is logged with a change but is not part of the feeder row, so it is
+ * never 'unknown'-filled: the audit row's `changed_by` must be the real email. */
+const REASON_MAX = 250;
 
 /** Format a Date as `yyyy-mm-dd` for display and date inputs; '' when null. */
 const toInputDate = (d: Date | null): string =>
@@ -43,13 +58,26 @@ function editFromRow(row: ClearingPlanRow): ClearingPlanEdit {
 export function HomePage() {
   const { signOut, user } = useAuth();
   const [rows, setRows] = useState<ClearingPlanRow[]>([]);
+  const [recent, setRecent] = useState<ChangeLogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [seedError, setSeedError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // The audit row's author. The email claim only — no id/'unknown' fallback (a
+  // change-log decision): without an email we don't attempt the log write.
+  const changedBy = user?.email ?? null;
+  // Who to stamp on the feeder row itself (unchanged, client-set, not audit-grade).
+  const updatedBy = user?.email ?? user?.id ?? 'unknown';
 
   const fetchRows = useCallback(async () => {
-    setRows(await listClearingPlans());
+    const [feeders, changes] = await Promise.all([
+      listClearingPlans(),
+      listRecentChanges(20),
+    ]);
+    setRows(feeders);
+    setRecent(changes);
     setLoading(false);
   }, []);
 
@@ -61,13 +89,21 @@ export function HomePage() {
     setSeedError(null);
     setSeeding(true);
     try {
-      await seedFabric(user?.email ?? user?.id ?? 'unknown');
+      await seedFabric(updatedBy);
       await fetchRows();
     } catch (err) {
       setSeedError(toUserMessage(err, 'Failed to load data.'));
     } finally {
       setSeeding(false);
     }
+  };
+
+  // Called after a feeder save. `notice` carries a "saved but not logged"
+  // warning when the edit persisted but its audit row did not.
+  const handleSaved = async (warning?: string) => {
+    setEditingId(null);
+    setNotice(warning ?? null);
+    await fetchRows();
   };
 
   // The gated Fabric seed: offered only against a real backend when empty.
@@ -96,13 +132,24 @@ export function HomePage() {
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
         <ClaimsPanel />
 
-        {/* The one-time feeder load (prompt 09). Offered on the Fabric backend;
-            it only succeeds while the gated create permission is enabled. */}
-        {!isLocalBackend() && !loading && (
-          <ImportPanel
-            updatedBy={user?.email ?? user?.id ?? 'unknown'}
-            onImported={fetchRows}
-          />
+        {notice && (
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <span>{notice}</span>
+            <button
+              onClick={() => setNotice(null)}
+              className="text-amber-500 hover:text-amber-700"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* The one-time feeder load (prompt 09). Hidden unless the app was built
+            with VITE_ENABLE_FEEDER_IMPORT=true (off by default); it only succeeds
+            while the gated create permission is enabled. */}
+        {isFeederImportEnabled() && !isLocalBackend() && !loading && (
+          <ImportPanel updatedBy={updatedBy} onImported={fetchRows} />
         )}
 
         {loading ? (
@@ -124,22 +171,127 @@ export function HomePage() {
             )}
           </div>
         ) : (
-          <FeederTable
-            rows={rows}
-            editingId={editingId}
-            onEdit={setEditingId}
-            onCancel={() => setEditingId(null)}
-            onSaved={async () => {
-              setEditingId(null);
-              await fetchRows();
-            }}
-            updatedBy={user?.email ?? user?.id ?? 'unknown'}
-          />
+          <>
+            <FeederTable
+              rows={rows}
+              editingId={editingId}
+              onEdit={setEditingId}
+              onCancel={() => setEditingId(null)}
+              onSaved={handleSaved}
+              updatedBy={updatedBy}
+              changedBy={changedBy}
+            />
+            <RecentChanges rows={recent} />
+          </>
         )}
       </main>
     </div>
   );
 }
+
+/** The last 20 changes across all feeders, newest first. */
+function RecentChanges({ rows }: { rows: ChangeLogRow[] }) {
+  if (rows.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white px-6 py-5">
+      <h2 className="mb-3 text-sm font-semibold text-gray-900">
+        Recent changes
+      </h2>
+      <ul className="divide-y divide-gray-100 text-sm">
+        {rows.map((entry) => (
+          <li key={entry.id} className="py-2">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+              <span className="font-medium text-gray-900">
+                {entry.feeder_id}
+              </span>
+              <span className="text-xs text-gray-400">
+                {formatWhen(entry.changed_at)} · {entry.changed_by}
+              </span>
+            </div>
+            <ChangeList changes={entry.changes} />
+            {entry.reason && (
+              <p className="mt-0.5 text-xs italic text-gray-500">
+                “{entry.reason}”
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** The change history for one feeder, newest first, shown inside its edit view. */
+function FeederHistory({ feederId }: { feederId: string }) {
+  const [history, setHistory] = useState<ChangeLogRow[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void listFeederHistory(feederId).then((h) => {
+      if (!cancelled) setHistory(h);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [feederId]);
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-4 py-3">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        History
+      </h3>
+      {history === null ? (
+        <p className="text-xs text-gray-400">Loading…</p>
+      ) : history.length === 0 ? (
+        <p className="text-xs text-gray-400">No changes logged yet.</p>
+      ) : (
+        <ul className="divide-y divide-gray-200 text-sm">
+          {history.map((entry) => (
+            <li key={entry.id} className="py-2">
+              <div className="text-xs text-gray-400">
+                {formatWhen(entry.changed_at)} · {entry.changed_by}
+              </div>
+              <ChangeList changes={entry.changes} />
+              {entry.reason && (
+                <p className="mt-0.5 text-xs italic text-gray-500">
+                  “{entry.reason}”
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** One field change per line: `Field: old → new`. */
+function ChangeList({ changes }: { changes: FieldChange[] }) {
+  if (changes.length === 0) return null;
+  return (
+    <ul className="mt-0.5 space-y-0.5 text-xs text-gray-700">
+      {changes.map((c) => (
+        <li key={c.field}>
+          <span className="text-gray-500">{FIELD_LABELS[c.field]}:</span>{' '}
+          <span className="text-gray-400">{formatValue(c.before)}</span>
+          {' → '}
+          <span className="font-medium text-gray-900">
+            {formatValue(c.after)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const formatWhen = (d: Date): string =>
+  d.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
+const formatValue = (v: string | number | null): string =>
+  v == null || v === '' ? '(none)' : String(v);
 
 function FeederTable({
   rows,
@@ -148,13 +300,15 @@ function FeederTable({
   onCancel,
   onSaved,
   updatedBy,
+  changedBy,
 }: {
   rows: ClearingPlanRow[];
   editingId: string | null;
   onEdit: (id: string) => void;
   onCancel: () => void;
-  onSaved: () => Promise<void>;
+  onSaved: (warning?: string) => Promise<void>;
   updatedBy: string;
+  changedBy: string | null;
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -177,6 +331,7 @@ function FeederTable({
                   <EditForm
                     row={row}
                     updatedBy={updatedBy}
+                    changedBy={changedBy}
                     onCancel={onCancel}
                     onSaved={onSaved}
                   />
@@ -213,15 +368,18 @@ function FeederTable({
 function EditForm({
   row,
   updatedBy,
+  changedBy,
   onCancel,
   onSaved,
 }: {
   row: ClearingPlanRow;
   updatedBy: string;
+  changedBy: string | null;
   onCancel: () => void;
-  onSaved: () => Promise<void>;
+  onSaved: (warning?: string) => Promise<void>;
 }) {
   const [edit, setEdit] = useState<ClearingPlanEdit>(() => editFromRow(row));
+  const [reason, setReason] = useState('');
   const [errors, setErrors] = useState<ClearingPlanErrors>({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -240,8 +398,17 @@ function EditForm({
     setSaveError(null);
     setSaving(true);
     try {
-      await updateClearingPlan(row.id, edit, updatedBy);
-      await onSaved();
+      // Save first; the read-back gives the server-verified row (prompt 08).
+      const saved = await updateClearingPlan(row.id, edit, updatedBy);
+      // Then log the change. A logging failure does NOT undo the save — it is
+      // surfaced as a "saved but not logged" warning, never hidden.
+      const result = await logFeederUpdate(
+        row,
+        saved,
+        changedBy,
+        reason.trim() || null
+      );
+      await onSaved(result.error);
     } catch (err) {
       setSaveError(toUserMessage(err, 'Failed to save.'));
     } finally {
@@ -340,7 +507,20 @@ function EditForm({
         />
       </Field>
 
+      <Field label={`Reason for change (optional, ${reason.length}/${REASON_MAX})`}>
+        <input
+          type="text"
+          value={reason}
+          maxLength={REASON_MAX}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Recorded in the change log"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2"
+        />
+      </Field>
+
       {saveError && <p className="text-sm text-red-600">{saveError}</p>}
+
+      <FeederHistory feederId={row.feeder_id} />
 
       <div className="flex gap-3">
         <button
