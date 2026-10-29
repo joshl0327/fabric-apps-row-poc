@@ -13,13 +13,12 @@ table FACT_ROW_PLAN
 	column LAST_CLEARED_DATE
 		dataType: dateTime
 		formatString: Long Date
+		sourceProviderType: date
 		lineageTag: 7cdefaf0-5018-4929-931a-057f8da8f471
 		summarizeBy: none
 		sourceColumn: LAST_CLEARED_DATE
 
 		annotation SummarizationSetBy = Automatic
-
-		annotation UnderlyingDateTimeDataType = Date
 
 	column LAST_WORK_DONE
 		dataType: string
@@ -32,13 +31,12 @@ table FACT_ROW_PLAN
 	column NEXT_CLEARING_DATE
 		dataType: dateTime
 		formatString: Long Date
+		sourceProviderType: date
 		lineageTag: 216c42b3-7708-44be-afee-bf8967a868f7
 		summarizeBy: none
 		sourceColumn: NEXT_CLEARING_DATE
 
 		annotation SummarizationSetBy = Automatic
-
-		annotation UnderlyingDateTimeDataType = Date
 
 	column DATE_CERTAINTY
 		dataType: string

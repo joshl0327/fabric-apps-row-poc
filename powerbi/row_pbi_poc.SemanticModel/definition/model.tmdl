@@ -9,7 +9,7 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBI_QueryOrder = ["DIM_CIRCUIT","DIM_DATE_CERTAINTY","DIM_DISTRICT","FACT_DQ_ISSUE","DIM_VENDOR","FACT_ROW_PLAN","Snowflake_Server","WH"]
+annotation PBI_QueryOrder = ["DIM_CIRCUIT","DIM_DATE_CERTAINTY","DIM_DISTRICT","FACT_DQ_ISSUE","DIM_VENDOR","FACT_ROW_PLAN","Snowflake_Server","WH","App_SQL_Server","App_SQL_Database"]
 
 annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
 
