@@ -1,0 +1,74 @@
+name: CI
+
+# Runs the same checks the agent runs locally, on every pull request to main.
+# Make the two jobs below required in the "Protect main" ruleset so a failing
+# PR cannot merge. Read-only: no secrets, no tokens, no deploy, no Fabric.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: the workflow only reads the repository. It never writes to
+# the repo, mints a token, or touches Fabric / Snowflake.
+permissions:
+  contents: read
+
+jobs:
+  app:
+    # Job name shown in the checks list — select this exact name as a required
+    # check in the ruleset.
+    name: App build, test, lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/row-tracker
+    env:
+      # Opt out of Rayfin CLI telemetry (the prebuild step shells out to it).
+      RAYFIN_TELEMETRY_OPTOUT: '1'
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24' # matches the project's local Node (v24.20)
+          cache: npm
+          cache-dependency-path: app/row-tracker/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      # Build first: the append-only ChangeLog permission test imports the
+      # tsc-compiled entities from rayfin/.temp/compiled, which `npm run build`
+      # produces. The build's prebuild step (`rayfin env --framework vite`) only
+      # maps RAYFIN_PUBLIC_* env vars into .env.local — it makes no Fabric call
+      # and needs no `rayfin login`.
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+      - name: Lint
+        run: npm run lint
+
+  report:
+    # Job name shown in the checks list — select this exact name as a required
+    # check in the ruleset.
+    name: Report PBIR validate
+    # Ubuntu, not Windows: `validate` is a static PBIR conformance check (JSON
+    # Schema, IDs, formatting, theme, layout) that reads the files on disk. Only
+    # the CLI's `preview --host desktop` path needs Windows (it drives Power BI
+    # Desktop over a named pipe), and CI does not preview.
+    runs-on: ubuntu-latest
+    env:
+      # validate never launches a browser, so skip Playwright's browser
+      # download during install (it is a transitive dependency of the CLI).
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Install PBIR authoring CLI
+        run: npm install -g @microsoft/powerbi-report-authoring-cli@0.5.0
+      - name: Validate report
+        run: powerbi-report-author validate "powerbi/row_pbi_poc.Report"
