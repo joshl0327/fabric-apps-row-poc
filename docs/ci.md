@@ -7,8 +7,9 @@ main" ruleset, a pull request cannot merge until they pass.
 
 This is Phase 5, part 1. It is deliberately read-only: `permissions:
 contents: read`, no secrets, no tokens, no deploy or publish step, and no
-contact with Fabric or Snowflake. A later part adds a prod workspace and a
-deploy job that only runs after a human approval.
+contact with Fabric or Snowflake. Part 2 adds the prod workspace and the deploy
+job that runs from `main` and only after a human approval — see `docs/deploy.md`
+(`.github/workflows/deploy-prod.yml`).
 
 ## What runs
 
