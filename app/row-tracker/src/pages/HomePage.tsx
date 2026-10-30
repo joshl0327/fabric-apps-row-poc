@@ -106,8 +106,11 @@ export function HomePage() {
     await fetchRows();
   };
 
-  // The gated Fabric seed: offered only against a real backend when empty.
-  const showSeed = !isLocalBackend() && !loading && rows.length === 0;
+  const isEmpty = !loading && rows.length === 0;
+  // The Fabric seed sits behind the same off-by-default build flag as the
+  // Import panel (VITE_ENABLE_FEEDER_IMPORT). With the flag off, an empty table
+  // shows a plain message and no load controls.
+  const showSeed = isEmpty && !isLocalBackend() && isFeederImportEnabled();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -169,6 +172,10 @@ export function HomePage() {
             {seedError && (
               <p className="mt-3 text-sm text-red-600">{seedError}</p>
             )}
+          </div>
+        ) : isEmpty ? (
+          <div className="rounded-xl border border-gray-200 bg-white px-6 py-10 text-center">
+            <p className="text-sm text-gray-500">No feeders loaded yet</p>
           </div>
         ) : (
           <>
