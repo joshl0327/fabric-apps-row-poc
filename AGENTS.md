@@ -61,6 +61,11 @@ Approved connection targets:
 - Fabric workspace `ROW-POC-Dev`, only in a later phase and only when I ask.
 - Snowflake: none for the agent (see the hard rules).
 
+The production workspace **ROW-POC-Prod** also exists, but it is **off limits to
+the agent entirely**. Nothing the agent runs connects to it. The app reaches
+prod only through `.github/workflows/deploy-prod.yml` (GitHub Actions, from
+`main`, after a human approval) — see `docs/deploy.md`. The agent never deploys.
+
 Rules:
 
 - Never connect to, query or screenshot anything not on the list above. If a

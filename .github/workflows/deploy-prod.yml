@@ -1,0 +1,118 @@
+name: Deploy to prod
+
+# Deploys the Fabric App (app/row-tracker) to the ROW-POC-Prod workspace.
+#
+# The app reaches production ONLY through this job. Nobody deploys to prod from
+# a laptop, and the coding agent never deploys. The `prod` GitHub environment's
+# required reviewer gates every run: the job pauses until a human approves it.
+#
+# Auth is GitHub OIDC -> azure/login (federated credential, no client secret) ->
+# an Azure CLI token for the Fabric API -> RAYFIN_TOKEN. There are no secrets in
+# this workflow; everything it needs is in the `prod` environment's variables.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/row-tracker/**'
+  workflow_dispatch:
+
+# Least privilege: mint an OIDC token for azure/login, and read the repo. Nothing
+# else — no repo writes, no package publish.
+permissions:
+  id-token: write
+  contents: read
+
+# One prod deploy at a time. Never cancel a deploy in flight (a half-applied
+# schema is worse than a queued run), so new runs wait instead.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy app to ROW-POC-Prod
+    runs-on: ubuntu-latest
+    # The approval gate. The `prod` environment requires reviewer joshl0327 and
+    # only allows deployments from main; the job waits here until approved.
+    environment: prod
+    defaults:
+      run:
+        working-directory: app/row-tracker
+    env:
+      # Rayfin CLI collects nothing in CI.
+      RAYFIN_TELEMETRY_OPTOUT: '1'
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24' # matches the project's local Node (v24.20)
+          cache: npm
+          cache-dependency-path: app/row-tracker/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      # Build and test are the gate: deploy only what passes. A failure here
+      # stops the job before any Azure or Fabric contact. Build before tests —
+      # the ChangeLog permission test imports the tsc-compiled entities that the
+      # build produces (same order as CI and the Definition of Done). The build's
+      # prebuild (`rayfin env --framework vite`) only maps RAYFIN_PUBLIC_* into
+      # .env.local; it makes no Fabric call and needs no login.
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+      # OIDC sign-in with the federated credential on gh-row-poc-deploy. No
+      # subscription (the app is only a Fabric Contributor) and no client secret.
+      - name: Azure login (OIDC, no secret)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      # Acquire a Bearer token for the Fabric REST API (api.fabric.microsoft.com),
+      # the audience `rayfin up` needs. Mask it and hand it to the deploy step via
+      # the job env — the value is never printed.
+      - name: Acquire Fabric API token
+        run: |
+          token=$(az account get-access-token \
+            --resource https://api.fabric.microsoft.com \
+            --query accessToken -o tsv)
+          echo "::add-mask::$token"
+          echo "RAYFIN_TOKEN=$token" >> "$GITHUB_ENV"
+      # Deploy + apply schema to ROW-POC-Prod, targeted by workspace ID so this
+      # job never depends on a committed deployment registry (gitignored) and
+      # Josh's local `rayfin up` still goes to ROW-POC-Dev. --yes runs unattended;
+      # --output json gives a machine-readable result we parse for the app URL.
+      - name: Deploy to ROW-POC-Prod
+        id: deploy
+        env:
+          RAYFIN_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
+          RAYFIN_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        run: |
+          npx rayfin up \
+            --workspace-id "${{ vars.FABRIC_WORKSPACE_ID }}" \
+            --item-name row-tracker \
+            --yes \
+            --output json | tee rayfin-up.json
+      # Short summary: commit, who triggered the run, and the app URL if Rayfin
+      # returned one. No tokens, no .env, no extra IDs.
+      - name: Job summary
+        if: always()
+        run: |
+          url=''
+          if [ -f rayfin-up.json ]; then
+            url=$(jq -r '.deployment.hostingUrl // .hostingUrl // empty' rayfin-up.json 2>/dev/null || true)
+          fi
+          {
+            echo "## Prod deploy"
+            echo ""
+            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Triggered by: @${{ github.actor }}"
+            echo "- Workspace: ROW-POC-Prod"
+            if [ -n "$url" ]; then
+              echo "- App URL: $url"
+            else
+              echo "- App URL: not reported by this run"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
