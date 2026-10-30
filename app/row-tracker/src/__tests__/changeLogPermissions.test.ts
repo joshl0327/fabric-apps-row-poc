@@ -63,7 +63,10 @@ describe('ChangeLog is append-only (generated DAB config)', () => {
     expect(create?.policy?.database).toBe('@claims.email eq @item.changed_by');
   });
 
-  it('leaves ClearingPlan unchanged (read + update, still no create/delete)', () => {
-    expect(grantedActions('ClearingPlan').sort()).toEqual(['read', 'update']);
+  it('ClearingPlan is read + update + create (still no delete)', () => {
+    // TEMPORARY: create is enabled on ClearingPlan only to load the 153 feeders
+    // into ROW-POC-Prod. A follow-up PR switches create back off; revert this
+    // expectation to ['read', 'update'] together with that change.
+    expect(grantedActions('ClearingPlan').sort()).toEqual(['create', 'read', 'update']);
   });
 });
