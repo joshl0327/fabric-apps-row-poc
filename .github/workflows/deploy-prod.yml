@@ -15,6 +15,13 @@ on:
     paths:
       - 'app/row-tracker/**'
   workflow_dispatch:
+    inputs:
+      enable_feeder_import:
+        description: >-
+          Build this one deploy with the feeder Import panel enabled (the
+          one-time 153-feeder migration only). Leave off for a normal deploy.
+        type: boolean
+        default: false
 
 # Least privilege: mint an OIDC token for azure/login, and read the repo. Nothing
 # else — no repo writes, no package publish.
@@ -31,7 +38,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy app to ROW-POC-Prod
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # The approval gate. The `prod` environment requires reviewer joshl0327 and
     # only allows deployments from main; the job waits here until approved.
     environment: prod
@@ -52,13 +59,28 @@ jobs:
           cache-dependency-path: app/row-tracker/package-lock.json
       - name: Install dependencies
         run: npm ci
+      # Resolve the single build flag for this deploy. A push to main always
+      # builds with feeder import OFF; only a manual run (workflow_dispatch) with
+      # the input ticked turns it on, for that one build. The value is echoed in
+      # the job summary so the run history records who deployed with import on.
+      - name: Resolve build flags
+        id: flag
+        run: |
+          enable='false'
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.enable_feeder_import }}" = "true" ]; then
+            enable='true'
+          fi
+          echo "enable_feeder_import=$enable" >> "$GITHUB_OUTPUT"
       # Build and test are the gate: deploy only what passes. A failure here
       # stops the job before any Azure or Fabric contact. Build before tests —
       # the ChangeLog permission test imports the tsc-compiled entities that the
       # build produces (same order as CI and the Definition of Done). The build's
       # prebuild (`rayfin env --framework vite`) only maps RAYFIN_PUBLIC_* into
-      # .env.local; it makes no Fabric call and needs no login.
+      # .env.local; it makes no Fabric call and needs no login. VITE_ENABLE_FEEDER_IMPORT
+      # is off unless this is a manual import deploy (Vite inlines it; off = tree-shaken out).
       - name: Build
+        env:
+          VITE_ENABLE_FEEDER_IMPORT: ${{ steps.flag.outputs.enable_feeder_import }}
         run: npm run build
       - name: Test
         run: npm test
@@ -95,14 +117,18 @@ jobs:
             --item-name row-tracker \
             --yes \
             --output json | tee rayfin-up.json
-      # Short summary: commit, who triggered the run, and the app URL if Rayfin
-      # returned one. No tokens, no .env, no extra IDs.
+      # Short summary: commit, who triggered the run, the import flag, and the
+      # app URL if Rayfin reported one. The URL comes from `rayfin up`'s JSON
+      # (never from any .env). The first prod deploy's fixed-path lookup missed
+      # it, so recursively pick the first string that is a Fabric hosting URL —
+      # robust to where Rayfin puts the field. Fall back to a pointer to the App
+      # item (the gap is documented in docs/deploy.md). No tokens, no .env.
       - name: Job summary
         if: always()
         run: |
           url=''
           if [ -f rayfin-up.json ]; then
-            url=$(jq -r '.deployment.hostingUrl // .hostingUrl // empty' rayfin-up.json 2>/dev/null || true)
+            url=$(jq -r '[.. | strings | select(test("\\.webapp\\.fabricapps\\.net"))] | first // empty' rayfin-up.json 2>/dev/null || true)
           fi
           {
             echo "## Prod deploy"
@@ -110,9 +136,10 @@ jobs:
             echo "- Commit: \`${{ github.sha }}\`"
             echo "- Triggered by: @${{ github.actor }}"
             echo "- Workspace: ROW-POC-Prod"
+            echo "- Feeder import this build: \`${{ steps.flag.outputs.enable_feeder_import }}\`"
             if [ -n "$url" ]; then
               echo "- App URL: $url"
             else
-              echo "- App URL: not reported by this run"
+              echo "- App URL: not reported by this run — see the App item in ROW-POC-Prod"
             fi
           } >> "$GITHUB_STEP_SUMMARY"

@@ -18,7 +18,7 @@ jobs:
     # Job name shown in the checks list — select this exact name as a required
     # check in the ruleset.
     name: App build, test, lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: app/row-tracker
@@ -56,7 +56,7 @@ jobs:
     # Schema, IDs, formatting, theme, layout) that reads the files on disk. Only
     # the CLI's `preview --host desktop` path needs Windows (it drives Power BI
     # Desktop over a named pipe), and CI does not preview.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # validate never launches a browser, so skip Playwright's browser
       # download during install (it is a transitive dependency of the CLI).

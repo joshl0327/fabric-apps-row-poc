@@ -8,10 +8,14 @@ services:
       enabled: true
     password:
       enabled: true
+    # Shared across every environment this project deploys to (a documented
+    # known gap — see docs/deploy.md). Dev + localhost stay; the prod hosting
+    # URL is committed so each settings-sync keeps the prod redirect registered.
     allowedRedirectUris:
       - http://localhost:5173
       - http://127.0.0.1:5173
       - https://lyric-vista-069cd8409c-westus3.webapp.fabricapps.net
+      - https://hale-robin-0921441f70-westus3.webapp.fabricapps.net
   data:
     enabled: true
     dialect: mssql

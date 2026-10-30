@@ -21,8 +21,18 @@ This is Phase 5, part 2. Part 1 (`docs/ci.md`) added the read-only PR checks.
    continue.
 4. **Deploy.** The job builds and tests the app, signs in to Azure with OIDC,
    gets a Fabric API token, and runs `rayfin up` against **ROW-POC-Prod**. The
-   job summary shows the commit, who triggered it, and the app URL if Rayfin
-   returned one.
+   job summary shows the commit, who triggered it, whether this build enabled
+   the feeder import (see "Feeder-import deploys" below), and the app URL.
+
+**The app URL in the summary** is read from `rayfin up`'s `--output json`
+(never from any `.env` file): the summary step recursively picks the first
+string that is a Fabric hosting URL (`*.webapp.fabricapps.net`), so it doesn't
+depend on where Rayfin nests the field. The first prod deploy's fixed-path
+lookup missed it and printed "App URL: not reported by this run". If the JSON
+still carries no hosting URL (e.g. a `rayfin up status --output json` shape
+without one), the summary falls back to **"not reported by this run — see the
+App item in ROW-POC-Prod"**: open the App item in that workspace to get its
+address.
 
 You can also start a deploy by hand from the **Actions** tab (**Run workflow** /
 `workflow_dispatch`) — it still stops at the same approval gate.
@@ -96,10 +106,11 @@ but on the runner that write-back is thrown away. In Dev, sign-in worked right
 after the first `rayfin up` (the service registers its own hosting origin during
 the deploy), so the first prod deploy is expected to sign in too.
 
-**Hardening (small follow-up PR after the first prod deploy):** take the prod
-hosting URL from the job summary (or `rayfin up`'s JSON) and commit it into
-`rayfin.yml`'s `allowedRedirectUris`. From then on every deploy's settings-sync
-keeps the prod redirect registered, independent of the per-run write-back.
+**Hardening (done, prompt 14).** The prod hosting URL
+(`https://hale-robin-0921441f70-westus3.webapp.fabricapps.net`) is now committed
+into `rayfin.yml`'s `allowedRedirectUris`. From here on every deploy's
+settings-sync keeps the prod redirect registered, independent of the per-run
+write-back.
 
 ### Known gap: `allowedRedirectUris` is a shared list
 
@@ -160,6 +171,59 @@ what OIDC + a federated credential avoids. It's recorded here only as the
 fallback if OIDC ever can't be used. If it were ever adopted, the secret would
 live in the `prod` environment's **secrets** (not variables), and the workflow's
 `permissions` would no longer need `id-token: write`.
+
+## Feeder-import deploys (the one switch for the migration)
+
+The app ships with the **feeder Import panel** (and the empty-state "Load sample
+data" button) **off**: both sit behind the build flag `VITE_ENABLE_FEEDER_IMPORT`
+(`src/services/featureFlags.ts`), which Vite tree-shakes out when it isn't
+`"true"`. A deployed prod app therefore shows **no load controls**; an empty
+table just reads "No feeders loaded yet".
+
+The deploy workflow decides that flag per run:
+
+- **Push-triggered deploys always build with import OFF.** A merge to `main`
+  never turns it on, so a routine deploy can't expose the import panel.
+- **A manual run can turn it on for that one build.** `workflow_dispatch` has a
+  boolean input **`enable_feeder_import`** (default **false**). Tick it in
+  **Actions → Deploy to prod → Run workflow** and that single build sets
+  `VITE_ENABLE_FEEDER_IMPORT=true`. The job summary records the value
+  ("Feeder import this build: `true`/`false`"), so the run history shows who
+  deployed with import switched on.
+
+This is **only the UI switch**. The server-side create permission
+(`@authenticated('create')` on `ClearingPlan`) is a **separate** gate, flipped
+in its own PRs (below) — turning the UI on without create still can't write
+rows (the API exposes no create mutation).
+
+## Migration runbook: load the 153 feeders into prod
+
+Exact steps to populate the empty prod app once. Two code gates must both be
+open during the load — the server `create` permission (PRs) and the UI import
+panel (the manual deploy input) — and both are closed again afterwards.
+
+1. **PR A — open create.** In `rayfin/data/ClearingPlan.ts`, uncomment
+   `// @authenticated('create')`. Open the PR, let CI pass, and **merge** to
+   `main`.
+2. **Approve the push-triggered deploy.** The merge triggers "Deploy to prod".
+   **Approve** it at the `prod` gate. (This is a push deploy, so it builds with
+   import **off** — it only applies the create permission to the schema.)
+3. **Manual import deploy.** In **Actions → Deploy to prod → Run workflow**
+   (from `main`), tick **`enable_feeder_import`** and start it. **Approve** it at
+   the gate. This build has the Import panel on **and** create is now granted.
+4. **Export the CSV.** In Snowsight, run `snowflake/08_app_load_export.sql` as
+   `ROLE_REPORTER`; download the grid as CSV (expect **153 rows**).
+5. **Import in prod.** Sign in to the prod app, open the **Import feeders**
+   panel, choose the CSV, and check the reconciliation against the expected
+   counts: **153** feeders in plan; certainty **142 / 1 / 2 / 8** (confirmed /
+   tentative / next year / TBD); **143** with a next clearing date. Any mismatch
+   shows in red. (Then clean up the leftover seed rows per `docs/app-notes.md`.)
+6. **PR B — close create.** Re-comment `@authenticated('create')`. Open the PR,
+   let CI pass, and **merge**.
+7. **Approve the normal deploy.** Approve the push-triggered "Deploy to prod".
+   It builds with import **off** again and locks creates back down.
+8. **Confirm.** Open the prod app: the **Import panel is gone** and creates are
+   rejected by the API. The 153 feeders remain.
 
 ## Rollback
 

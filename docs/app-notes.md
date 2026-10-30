@@ -239,7 +239,7 @@ delete.
 | Types | `src/services/changeLogModel.ts` | The logged fields, friendly labels, and the `ChangeLogRow` / `FieldChange` shapes. |
 | Service | `src/services/changeLog.ts` | `diffFeeder` (changed-fields diff), `buildChangeLogWrite`, `logFeederUpdate` (orchestrates the write), `listFeederHistory`, `listRecentChanges`. In-memory in local mode; typed Rayfin client against Fabric. |
 | UI | `src/pages/HomePage.tsx` | A **History** block in each feeder's edit view (newest first: when, who, field `old → new`, reason) and a **Recent changes** panel (last 20 across all feeders). An optional **Reason for change** input. Plain React + Tailwind; no new library. |
-| Flag | `src/services/featureFlags.ts`, `src/vite-env.d.ts` | `isFeederImportEnabled()` — the Import panel is hidden unless built with `VITE_ENABLE_FEEDER_IMPORT=true`. |
+| Flag | `src/services/featureFlags.ts`, `src/vite-env.d.ts` | `isFeederImportEnabled()` — **both** the Import panel and the empty-state "Load sample data" button are hidden unless built with `VITE_ENABLE_FEEDER_IMPORT=true` (prompt 14 put the seed button behind the same flag). With the flag off, an empty table shows a plain "No feeders loaded yet" message and no load controls. |
 
 **Write sequence.** On save: `updateClearingPlan` saves and read-backs the
 server-verified row (prompt 08). Then `logFeederUpdate(before, saved, …)` diffs
@@ -351,6 +351,24 @@ notes only:
   should stay the system of record later, add an `APP_SYNC` write path (a Rayfin
   Function or a scheduled copy) and switch `FACT_ROW_PLAN` back to Import from
   `ANALYTICS` — the downstream model and report would stay put.
+
+## Prod deployment (ROW-POC-Prod)
+
+The first prod deploy ran on 2026-10-29 ("Deploy to prod" #1): started by hand
+from `main`, held at the `prod` gate until approved, signed in to Azure with the
+federated credential (no secret), and `rayfin up` created the app, its SQL
+database and SQL endpoint in ROW-POC-Prod. Sign-in on the prod app works.
+
+- **Prod app URL:** `https://hale-robin-0921441f70-westus3.webapp.fabricapps.net`
+  (committed to `rayfin.yml`'s `allowedRedirectUris`; see `docs/deploy.md`).
+- **No custom app URL or domain.** Fabric Apps has no setting for a custom
+  hosting URL or domain — the hosting docs expose none, and the app keeps the
+  service-assigned `*.webapp.fabricapps.net` address. A public feature request
+  tracks this: **microsoft/rayfin issue #17**.
+- **Loading the 153 feeders into prod** follows the gated migration runbook in
+  `docs/deploy.md` (open create via a PR, run a manual import deploy with
+  `enable_feeder_import` ticked, import the CSV, then close create). The app's
+  import/reconciliation UI and leftover-cleanup SQL above are unchanged.
 
 ## Open questions
 
