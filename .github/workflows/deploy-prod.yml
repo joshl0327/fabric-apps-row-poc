@@ -106,17 +106,51 @@ jobs:
       # job never depends on a committed deployment registry (gitignored) and
       # Josh's local `rayfin up` still goes to ROW-POC-Dev. --yes runs unattended;
       # --output json gives a machine-readable result we parse for the app URL.
+      #
+      # VITE_ENABLE_FEEDER_IMPORT MUST be set here, not only on the earlier Build
+      # step. `rayfin up` runs its OWN build (staticHosting.buildCommand:
+      # `npm run build:fabric` in rayfin/rayfin.yml) and ships that bundle — the
+      # Build step above is only the pass/fail gate; its dist/ is discarded. Same
+      # resolved flag as the gate and the summary (single source of truth), so a
+      # push deploy stays `false` and only a ticked manual run ships it `true`.
       - name: Deploy to ROW-POC-Prod
         id: deploy
         env:
           RAYFIN_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
           RAYFIN_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          VITE_ENABLE_FEEDER_IMPORT: ${{ steps.flag.outputs.enable_feeder_import }}
         run: |
           npx rayfin up \
             --workspace-id "${{ vars.FABRIC_WORKSPACE_ID }}" \
             --item-name row-tracker \
             --yes \
             --output json | tee rayfin-up.json
+      # Report what ACTUALLY shipped, not what was requested. `rayfin up` left
+      # the bundle it uploaded in dist/, so inspect that same dist/ for the flag
+      # Vite inlined into it. The import gate is a runtime check
+      # (isFeederImportEnabled) — the panel is NOT tree-shaken out — so the string
+      # that only appears when the shipped build had import ON is the inlined env
+      # literal `VITE_ENABLE_FEEDER_IMPORT:"true"`. If that doesn't match the
+      # requested flag, fail the run: the upload already happened, but a red run
+      # makes the mismatch impossible to miss. (See docs/deploy.md.)
+      - name: Verify the shipped bundle matches the flag
+        id: verify
+        if: steps.deploy.outcome == 'success'
+        run: |
+          shipped='no'
+          if grep -rqF 'VITE_ENABLE_FEEDER_IMPORT:"true"' dist; then
+            shipped='yes'
+          fi
+          echo "import_panel_shipped=$shipped" >> "$GITHUB_OUTPUT"
+          want='no'
+          if [ "${{ steps.flag.outputs.enable_feeder_import }}" = 'true' ]; then
+            want='yes'
+          fi
+          echo "Requested feeder import: $want; shipped bundle: $shipped"
+          if [ "$shipped" != "$want" ]; then
+            echo "::error::Deployed bundle mismatch: requested feeder import '$want' but the uploaded dist/ shipped '$shipped'. The app now live in ROW-POC-Prod does NOT match the requested flag — check that the Deploy step sets VITE_ENABLE_FEEDER_IMPORT."
+            exit 1
+          fi
       # Short summary: commit, who triggered the run, the import flag, and the
       # app URL if Rayfin reported one. The URL comes from `rayfin up`'s JSON
       # (never from any .env). The first prod deploy's fixed-path lookup missed
@@ -136,7 +170,13 @@ jobs:
             echo "- Commit: \`${{ github.sha }}\`"
             echo "- Triggered by: @${{ github.actor }}"
             echo "- Workspace: ROW-POC-Prod"
-            echo "- Feeder import this build: \`${{ steps.flag.outputs.enable_feeder_import }}\`"
+            echo "- Feeder import requested: \`${{ steps.flag.outputs.enable_feeder_import }}\`"
+            shipped='${{ steps.verify.outputs.import_panel_shipped }}'
+            if [ -n "$shipped" ]; then
+              echo "- Import panel in deployed bundle: $shipped"
+            else
+              echo "- Import panel in deployed bundle: not checked (deploy did not complete)"
+            fi
             if [ -n "$url" ]; then
               echo "- App URL: $url"
             else

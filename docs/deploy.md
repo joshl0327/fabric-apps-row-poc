@@ -176,9 +176,12 @@ live in the `prod` environment's **secrets** (not variables), and the workflow's
 
 The app ships with the **feeder Import panel** (and the empty-state "Load sample
 data" button) **off**: both sit behind the build flag `VITE_ENABLE_FEEDER_IMPORT`
-(`src/services/featureFlags.ts`), which Vite tree-shakes out when it isn't
-`"true"`. A deployed prod app therefore shows **no load controls**; an empty
-table just reads "No feeders loaded yet".
+(`src/services/featureFlags.ts`). The gate is a **runtime** check —
+`isFeederImportEnabled()` returns `false` when the inlined flag isn't `"true"`,
+and the panel is not rendered. (The flag is a build-time constant Vite inlines;
+the panel's code is *not* actually tree-shaken out of the bundle — see "What
+actually shipped" below.) A deployed prod app therefore shows **no load
+controls**; an empty table just reads "No feeders loaded yet".
 
 The deploy workflow decides that flag per run:
 
@@ -187,9 +190,40 @@ The deploy workflow decides that flag per run:
 - **A manual run can turn it on for that one build.** `workflow_dispatch` has a
   boolean input **`enable_feeder_import`** (default **false**). Tick it in
   **Actions → Deploy to prod → Run workflow** and that single build sets
-  `VITE_ENABLE_FEEDER_IMPORT=true`. The job summary records the value
-  ("Feeder import this build: `true`/`false`"), so the run history shows who
-  deployed with import switched on.
+  `VITE_ENABLE_FEEDER_IMPORT=true`. The job summary records the requested value
+  ("Feeder import requested: `true`/`false`"), so the run history shows who
+  asked for import switched on.
+
+### The flag must be set on the *deploy* step, not only the Build gate
+
+`rayfin/rayfin.yml` sets `staticHosting.buildCommand: npm run build:fabric`, and
+the Rayfin guide confirms `rayfin up` *"runs your configured `buildCommand`,
+packages the output, and uploads it to the remote service"*
+(`app-backend/deploy.md`, `cli/quickstart.md`). So **`rayfin up` runs its own
+build and ships that bundle** — the workflow's earlier "Build" step is only the
+pass/fail gate, and the `dist/` it produced is discarded. Setting
+`VITE_ENABLE_FEEDER_IMPORT` only on the Build step therefore has no effect on
+what reaches prod. The flag is set from the **same resolved `steps.flag`
+output** on the **Deploy to ROW-POC-Prod** step as well, so the bundle `rayfin
+up` builds carries it. Push deploys still resolve to `false`.
+
+This is the bug behind run #6 (2026-10-30): the box was ticked and the summary
+said `true`, but the shipped build had the flag off, so prod showed no Import
+panel. **The summary reported the requested input, not the shipped build** — now
+corrected by the check below.
+
+### What actually shipped: the bundle check
+
+`rayfin up` leaves the bundle it uploaded in `dist/`, so the **Verify the shipped
+bundle matches the flag** step inspects that same `dist/` after the deploy. The
+Import panel is *not* tree-shaken out when the flag is off (the gate is a runtime
+call Rollup can't fold), so the string that only appears when the shipped build
+had import ON is the **inlined env literal `VITE_ENABLE_FEEDER_IMPORT:"true"`**.
+The step greps `dist/` for it and records the result in the summary as **"Import
+panel in deployed bundle: yes/no"**. If that doesn't match the requested flag,
+the step **fails the run** — the upload has already happened, but the run goes
+red so the mismatch can't be missed. A green run with "deployed bundle: yes"
+after a ticked manual run is the signal the Import panel really shipped.
 
 This is **only the UI switch**. The server-side create permission
 (`@authenticated('create')` on `ClearingPlan`) is a **separate** gate, flipped
