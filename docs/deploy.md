@@ -232,6 +232,14 @@ rows (the API exposes no create mutation).
 
 ## Migration runbook: load the 153 feeders into prod
 
+> **Status: completed 2026-11-01.** The in-app import reported **Created 153 ·
+> Updated 0 · Skipped 0**, and the reconciliation matched the expected counts:
+> **153** feeders in plan; certainty **142 / 1 / 2 / 8** (confirmed / tentative /
+> next year / TBD); **143** with a next clearing date. Both gates are closed
+> again: the UI gate by the next push deploy (push builds always ship import
+> off), the server `create` gate by PR B (prompt 16 — re-comments
+> `@authenticated('create')`).
+
 Exact steps to populate the empty prod app once. Two code gates must both be
 open during the load — the server `create` permission (PRs) and the UI import
 panel (the manual deploy input) — and both are closed again afterwards.
@@ -258,6 +266,27 @@ panel (the manual deploy input) — and both are closed again afterwards.
    It builds with import **off** again and locks creates back down.
 8. **Confirm.** Open the prod app: the **Import panel is gone** and creates are
    rejected by the API. The 153 feeders remain.
+
+### What went wrong during the migration
+
+The load itself reconciled cleanly, but it took two attempts to get the Import
+panel into prod:
+
+- **Run #6 (first import deploy, 2026-10-30) shipped with the panel off.** The
+  `enable_feeder_import` box was ticked and the summary said `true`, but prod
+  showed no Import panel. Cause: `rayfin up` runs its **own** build (its
+  configured `buildCommand`) and ships *that* bundle, so setting
+  `VITE_ENABLE_FEEDER_IMPORT` only on the workflow's earlier "Build" gate had no
+  effect on what reached prod. Fixed in **prompt 15**: the flag is now set on the
+  **deploy** step too, plus a bundle check that fails the run if the shipped
+  `dist/` doesn't match the requested flag. The successful import deploy was the
+  re-run after that fix.
+- **An unticked manual run (#5) would also have redeployed without the panel.**
+  `workflow_dispatch` defaults `enable_feeder_import` to **false**, so a manual
+  run started without ticking the box deploys import-off — the same visible
+  result as run #6, but for a different reason (nothing requested, not a build
+  bug). Only a manual run with the box ticked, after the prompt-15 fix, ships the
+  panel.
 
 ## Rollback
 
