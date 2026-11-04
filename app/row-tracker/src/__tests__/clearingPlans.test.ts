@@ -14,7 +14,7 @@ import {
 } from '@/services/clearingPlans';
 
 describe('clearingPlans service (in-memory mode)', () => {
-  it('lists the 15 seeded feeders sorted by feeder id', async () => {
+  it('lists the seeded feeders sorted by feeder id', async () => {
     const rows = await listClearingPlans();
     expect(rows).toHaveLength(15);
     const ids = rows.map((r) => r.feeder_id);

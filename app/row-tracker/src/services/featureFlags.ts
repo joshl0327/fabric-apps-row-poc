@@ -1,6 +1,10 @@
-// Build-time feature switches. Vite statically inlines `import.meta.env.*`, so a
-// flag that is unset at build time compiles to a constant `false` and the gated
-// UI is tree-shaken out of the bundle.
+// Build-time feature switches. Vite statically inlines `import.meta.env.*`, so
+// the flag's value is a build-time constant. The gated UI is hidden by a
+// RUNTIME check (`isFeederImportEnabled`), NOT tree-shaken out: the call is a
+// cross-module reference Rollup can't fold, so the panel's code and strings stay
+// in the bundle either way — only the inlined literal
+// `VITE_ENABLE_FEEDER_IMPORT:"true"|"false"` differs. The deploy workflow greps
+// the shipped bundle for that literal to confirm what actually shipped.
 
 // A read-only bag of env values; `import.meta.env` and test fixtures both
 // satisfy it. Typed as a record (not a single optional key) so it isn't a weak
