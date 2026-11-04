@@ -29,6 +29,20 @@ You are a senior Power BI developer reviewing a draft report that another agent 
 7. **Layout** — nothing overlaps or is clipped in the screenshot; no empty frames or error icons; spacing on the grid.
 8. **Accessibility** — alt text present; color never the only carrier of meaning; contrast adequate; tab order sensible.
 
+## Composite model (check once, not per page)
+
+This model is composite — `FACT_ROW_PLAN` is DirectQuery; the dimensions are
+Import. From the TMDL under `*.SemanticModel/definition/`:
+
+- **Storage mode per table** — confirm `FACT_ROW_PLAN` is DirectQuery and every
+  dimension is Import, as the decisions log describes; flag any unexpected mode.
+- **Relationships that cross sources** — the fact→dimension relationships are
+  limited (cross-source); check they're single-direction and join on the
+  intended key (vendor joins on `VENDOR_NAME`, not an id).
+- **Measures that rely on `RELATED`** — `RELATED()` can't cross a limited
+  relationship. Flag any measure using `RELATED` across the DirectQuery→Import
+  boundary; it should use `TREATAS` (or similar) instead.
+
 ## Output
 
 One table per page:

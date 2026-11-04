@@ -3,7 +3,7 @@ name: brillit-report-standards
 description: BrilliT house standards for Power BI reports — brillit.com brand (navy, logo blue, green, Arial), page framework (brand bar with logo and navigation, navy title band with title and slicers, KPI strip, body regions), visual selection, KPI cards, color and shading, navigation and bookmarks, and the theme built from brand tokens. Use whenever planning, designing, authoring or reviewing a Power BI report, together with the powerbi-report-cli skill.
 ---
 
-# BrilliT Power BI report standards — v0.2 (draft for team review)
+# BrilliT Power BI report standards — v0.3 (draft for team review)
 
 Brand derived from brillit.com: navy `#002f6e`, logo blue `#015a9c`, green `#00c18c`, heading navy `#193768`, Arial.
 
@@ -37,7 +37,7 @@ navigation_model: page_navigator
 theme:
   base: "themes/<Name>-<hash>.json, generated from themes/brand-tokens.json on Microsoft's base theme"
   user_overrides: "Keep the bands, region grid, semantic colors, Arial and token values"
-standards: "brillit-report-standards v0.2"
+standards: "brillit-report-standards v0.3"
 deviations: []   # each: { rule: <rule>, page: <page>, reason: <why> }
 ```
 
@@ -52,6 +52,28 @@ Use the region names and coordinates from `references/page-framework.md` in ever
 5. One value axis per chart — no dual-axis combos. Sort by value unless the axis is time or an ordered category.
 6. All colors come from tokens. Categorical slots in fixed order; good/warning/bad only for status or direction, never as a series color, and always with an icon or text. No web-green text on white.
 7. Alt text on every data visual; WCAG AA contrast for text.
+
+## Composite models (DirectQuery fact + Import dimensions)
+
+When a report mixes a DirectQuery fact with Import dimensions (as this POC does —
+`FACT_ROW_PLAN` is DirectQuery from the app's Fabric SQL DB, the dimensions are
+Import from Snowflake), two house rules keep measures and dates correct:
+
+1. **Use `TREATAS`, not `RELATED`, across a limited relationship.** A relationship
+   between a DirectQuery table and an Import table is **limited (cross-source)**,
+   and `RELATED()` can't traverse it. Pull a dimension column into a fact-grain
+   measure with a virtual relationship instead — e.g.
+   `CALCULATE(SUM(DIM[col]), TREATAS(VALUES(FACT[key]), DIM[key]))`.
+2. **Cast DirectQuery datetime columns to date at the source.** In the partition's
+   native query, `CAST` a `datetime2`/`datetime` column to `date` so it matches an
+   Import date dimension's grain and relationships don't silently miss.
+
+These are standards because the reviewer checks them on every composite report
+(see `.claude/agents/pbi-report-reviewer.md`). Two neighbouring lessons are
+**agent rules, not standards**, so they live in `AGENTS.md`: a TOM-only `Int64`
+type reverts on refresh (needs a Power Query type step), and Power BI Desktop
+writes the `$schema` lines (don't hand-author them) — both are model-build
+mechanics, not house design choices.
 
 ## Files
 
