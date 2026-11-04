@@ -1,5 +1,9 @@
 # Report Spec — ROW Clearing Plan
 
+> **Historical.** The approved R3 spec the v1 report was built from. Power BI
+> Desktop is the source of truth for the report now; see `docs/data-model.md`
+> and `docs/measures.md` for the current model and measures.
+
 ## Report identity
 - Report name: ROW Clearing Plan
 - Semantic model: row_pbi_poc (local PBIP, `powerbi/row_pbi_poc.SemanticModel`)

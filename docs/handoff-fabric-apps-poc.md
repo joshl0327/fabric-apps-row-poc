@@ -1,5 +1,9 @@
 # Handoff: AI-assisted Power BI report generation → Fabric Apps POC
 
+> **Historical (2026-10-15).** The kickoff handoff that started the report work,
+> kept as a record. For the current state see `README.md`, `AGENTS.md` and
+> `docs/` (decisions, data-model, measures, app-notes).
+
 Context to add to the Fabric Apps POC project. It carries the lessons from a separate working session on AI-assisted Power BI development into the POC's next step: generating the Power BI report from the existing PBIP (ROW clearing tracker, synthetic data, semantic model already built).
 
 ---

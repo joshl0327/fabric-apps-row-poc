@@ -15,13 +15,13 @@ data only.
 
 | Path | What's there |
 |---|---|
-| `snowflake/` | Numbered, re-runnable SQL scripts (`01_…` to `07_…`). A human runs them in Snowsight. |
+| `snowflake/` | Numbered, re-runnable SQL scripts (`01_…` to `06_…` and `08_…`). A human runs them in Snowsight. 07 (the `SVC_POWERBI` reporter user) was run by hand in Snowsight and is not in the repo. |
 | `data/` | Synthetic data generator; output goes to `data/out/` (gitignored) |
 | `prompts/` | Every prompt given to the agent, plus session transcripts, kept as a record |
 | `powerbi/row_pbi_poc.SemanticModel/` | Semantic model (TMDL) |
 | `powerbi/row_pbi_poc.Report/` | Report (PBIR) |
 | `themes/` | BrilliT brand tokens, theme builder, built theme, logo |
-| `docs/` | Decisions, cleaning rules, requirements, POC log, run sheet |
+| `docs/` | Decisions, cleaning rules, requirements, data model, measures, POC log, run sheet, plus governance, deploy and CI notes |
 | `tests/dax/` | DAX profiling and measure validation queries |
 | `_brief/` | Report spec written by the report planner |
 | `app/row-tracker/` | Fabric App (Rayfin SDK/CLI, TypeScript). ROW clearing tracker slice — see the "Fabric App" section below and `docs/app-notes.md`. |
@@ -39,9 +39,11 @@ Power BI developer (me) reviews, adjusts and signs off.
   commit: the paths to stage, named explicitly (never `git add -A` or
   `git add .`), and the message. The human approves each commit.
 - **Never use `--force`** with git or any CLI.
-- **Never deploy or publish.** Only the dev workspace `ROW-POC-Dev` exists.
-  Ask before any `npx rayfin up`, any Power BI management/publish mode, or any
-  Fabric write API, and only when I ask in that session.
+- **Never deploy or publish.** The agent only ever works against the dev
+  workspace `ROW-POC-Dev`; `ROW-POC-Prod` exists but is off limits (see the
+  data boundary). Ask before any `npx rayfin up`, any Power BI
+  management/publish mode, or any Fabric write API, and only when I ask in that
+  session.
 - **Never read or print secrets.** Don't open `.env*`, `*.p8`, `*.pem`,
   `secrets/`, or `~/.snowflake/`. Use placeholders in committed files.
 - **No Snowflake access.** Write SQL; the human runs it in Snowsight.
@@ -56,9 +58,14 @@ This project runs only against dev environments that hold synthetic data.
 
 Approved connection targets:
 
-- Power BI Desktop with `powerbi/row_pbi_poc.pbip` open. It imports synthetic
-  data from Snowflake `ROW_DB.ANALYTICS` through `ROLE_REPORTER`.
-- Fabric workspace `ROW-POC-Dev`, only in a later phase and only when I ask.
+- Power BI Desktop with `powerbi/row_pbi_poc.pbip` open. The model is
+  **composite**: every table imports synthetic data from Snowflake
+  `ROW_DB.ANALYTICS` through `ROLE_REPORTER`, except `FACT_ROW_PLAN`, which is
+  DirectQuery against the app's Fabric SQL database (`dbo.ClearingPlans`) — the
+  one scoped exception (see `docs/data-model.md`).
+- The app's Fabric SQL database, reached **only** through that Power BI Desktop
+  DirectQuery partition — never connected to directly.
+- Fabric workspace `ROW-POC-Dev`, only when I ask.
 - Snowflake: none for the agent (see the hard rules).
 
 The production workspace **ROW-POC-Prod** also exists, but it is **off limits to
@@ -78,10 +85,13 @@ Rules:
 ## Stack
 
 - Snowflake (Azure East US 2), database `ROW_DB`: schemas RAW, STAGING,
-  ANALYTICS, APP_SYNC. Warehouses `WH_TRANSFORM_XS`, `WH_REPORTING_XS`.
+  ANALYTICS, APP_SYNC. Warehouses `WH_TRANSFORM_XS`, `WH_REPORTING_XS`. The
+  `APP_SYNC` schema (and `ROLE_APP_SYNC` below) exist but are unused — the
+  app→Snowflake write-back was cut on 2026-10-28.
 - Roles: `ROLE_LOADER` writes RAW; `ROLE_BI_DEVELOPER` builds STAGING and
   ANALYTICS; `ROLE_REPORTER` reads ANALYTICS (Power BI, through the
-  `SVC_POWERBI` key-pair user); `ROLE_APP_SYNC` writes APP_SYNC.
+  `SVC_POWERBI` key-pair user); `ROLE_APP_SYNC` would write APP_SYNC (unused,
+  see above).
 - Power BI: PBIP with TMDL and PBIR. Server and warehouse are the Power Query
   parameters `Snowflake_Server` and `WH`. No credentials in the PBIP.
 - Fabric Apps: Rayfin SDK/CLI, TypeScript. Dev workspace `ROW-POC-Dev`.
@@ -125,7 +135,7 @@ Business definitions (decided):
 
 | Table | Role | Keys and notes |
 |---|---|---|
-| `FACT_ROW_PLAN` | Fact: clearing plan | `FEEDER_ID` → DIM_CIRCUIT, `VENDOR_ID` → DIM_VENDOR, `DATE_CERTAINTY` → DIM_DATE_CERTAINTY. Dates: `LAST_CLEARED_DATE`, `NEXT_CLEARING_DATE`. Also `PLANNED_YEAR`, `LAST_WORK_DONE`, `NOTES`, `DQ_ISSUE_COUNT`. Expected grain: one row per feeder (confirm in R1). |
+| `FACT_ROW_PLAN` | Fact: clearing plan. **DirectQuery** from the app's Fabric SQL DB (composite model; every other table is Import) | `FEEDER_ID` → DIM_CIRCUIT, `VENDOR_NAME` → DIM_VENDOR, `DATE_CERTAINTY` → DIM_DATE_CERTAINTY. Dates: `LAST_CLEARED_DATE`, `NEXT_CLEARING_DATE`. Also `PLANNED_YEAR`, `LAST_WORK_DONE`, `NOTES`. Grain: one row per feeder (153, confirmed R1). Relationships to the Import dimensions are limited (cross-source). See `docs/data-model.md`. |
 | `FACT_DQ_ISSUE` | Fact: data-quality issues, one row per issue | `FEEDER_ID` → DIM_CIRCUIT (2 orphan feeders have no match, by design). `ISSUE_TYPE`, `SOURCE_COLUMN`, `RAW_VALUE`, `CLEAN_VALUE`. |
 | `DIM_CIRCUIT` | Dimension: feeder / circuit | `FEEDER_ID` (one side). `CIRCUIT_NAME`, `CIRCUIT_NUM`, `SUBSTATION_NAME`, `SUBSTATION_NUM`, `LINE_MILES`, `RESPONSIBLE_DISTRICT_ID` → DIM_DISTRICT, `RESPONSIBLE_DISTRICT_NAME` (duplicates DIM_DISTRICT). |
 | `DIM_DISTRICT` | Dimension | `DISTRICT_ID`, `DISTRICT_NAME`. Snowflaked off DIM_CIRCUIT. |
@@ -143,10 +153,11 @@ single direction before R1. Confirmed in R1 profiling (see `docs/decisions.md`,
 
 Table and column names stay as they are (`DIM_` / `FACT_` naming).
 
-## Open model questions: resolve in R1, before writing measures
+## Model questions (resolved in R1 — see docs/decisions.md, 2026-10-15)
 
-Run `tests/dax/00_profile.dax` and record the answers in `docs/decisions.md`.
-The expected answers come from the Snowflake build; confirm them, don't assume.
+These were the open questions at R1; all four are now resolved and recorded in
+`docs/decisions.md`. Kept here as the record of what was asked and the expected
+answers that `tests/dax/00_profile.dax` confirmed.
 
 1. **Grain of FACT_ROW_PLAN.** Expected: one row per feeder, 153 rows.
    `LINE_MILES` lives on DIM_CIRCUIT, so miles measures must count each feeder
@@ -182,6 +193,10 @@ The expected answers come from the Snowflake build; confirm them, don't assume.
 - Sort `DATE_CERTAINTY` by `SORT_ORDER`.
 - Any rename happens **before** report authoring, because PBIR binds visuals
   by name.
+- Integer key/year types go in a Power Query
+  `Table.TransformColumnTypes(..., Int64.Type)` step, not only in TOM: a refresh
+  re-infers Snowflake `NUMBER(38,0)` as `double` and reverts a TOM-only type
+  (which also flips a year column to summarize-by-sum).
 
 ## Report standards
 
@@ -227,8 +242,29 @@ questions.
   deploy: ask first.**
 - **No deploy, no Fabric `db` command, no new dependency without my ask.**
   `npx rayfin up`, `rayfin up db apply`, and `rayfin dev` all require my ask in
-  that session. Don't install an npm package without approval.
+  that session. Don't install an npm package without approval. Any package
+  added, removed or upgraded is listed in the PR with the reason and the bundle
+  size before and after. No `npm audit fix` without my ask, and never with
+  `--force`.
 - **Never read `.env` files**, including `app/row-tracker/rayfin/.env`.
+- **Governance.** Ownership, the tier boundary, the dependency footprint and
+  the supply-chain posture live in `docs/governance.md`; house practices for a
+  BI-owned Fabric App are in the `fabric-app-standards` skill.
+
+Lessons that must not repeat (rules, not history):
+
+- `rayfin up` runs `staticHosting.buildCommand` itself and ships *that* bundle,
+  so any `VITE_` flag must be set on the deploy step (not just a prior build
+  gate), and the shipped bundle is checked for the flag.
+- Clearing a field needs an explicit `null` (not `undefined`), and every save
+  is read back and compared, so a silent "left unchanged" can't recur.
+- Tests that build the data API config from the entity decorators need
+  `npm run build` first (they read the `tsc`-compiled output).
+- A permission change updates the permission test's expectation in the same PR.
+- Snowflake exports UPPERCASE column headers; code that reads an export must
+  account for that.
+- Snowsight worksheets are copies: paste the repo version of a script before
+  running, don't edit in place.
 
 ## Guardrails for Power BI work
 
@@ -248,6 +284,8 @@ questions.
   asking.
 - When a business definition is ambiguous, ask rather than guess, and record
   the answer in `docs/decisions.md`.
+- Don't hand-author the `$schema` lines in TMDL/PBIR; Power BI Desktop writes
+  and maintains them on save.
 - Every new measure gets a validation query in `tests/dax/` and a recorded
   result.
 - Record each step's time and the human fixes it needed in `docs/poc-log.md`.

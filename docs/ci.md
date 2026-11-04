@@ -22,7 +22,7 @@ Runs in `app/row-tracker`:
 1. `npm ci` — clean install from the committed `package-lock.json`.
 2. `npm run build` — `rayfin env --framework vite` (prebuild) then
    `tsc -b && vite build`.
-3. `npm test` — the Vitest suite (49 tests).
+3. `npm test` — the Vitest suite (51 tests).
 4. `npm run lint` — ESLint.
 
 **Build runs before the tests on purpose.** The append-only `ChangeLog`

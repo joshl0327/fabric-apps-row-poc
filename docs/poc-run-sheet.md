@@ -1,5 +1,10 @@
 # POC run sheet: generate the ROW Clearing Plan report with the Power BI skills
 
+> **Historical.** This run sheet planned the report build (R0–R5); that work is
+> done and the POC is complete. The "Later: write-back" phase (the cut Phase 6/7
+> / User Data Function write-back) was **cut on 2026-10-28** (see
+> `docs/decisions.md`). Kept as a record of the steps that were run.
+
 Run this in Claude Code from the repo folder (`C:\dev\fabric-apps-row-poc`),
 on the synthetic-data model. One phase at a time; each has a done check.
 Human gates: the spec approval (R3) and the per-page review (R4). Keep

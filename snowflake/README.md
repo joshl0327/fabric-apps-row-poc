@@ -11,6 +11,11 @@ top and is safe to re-run. Synthetic data only.
 | 03 | `03_raw_load.sql` | `ROLE_LOADER` | Full-refresh load of RAW from the stage. |
 | 04 | `04_staging_clean.sql` | `ROLE_BI_DEVELOPER` | Build STAGING: config, typed dimension views, the clean clearing plan, and the data-quality views. |
 | 05 | `05_staging_test.sql` | `ROLE_BI_DEVELOPER` | Prove the cleaning rules against `RAW.ANSWER_KEY`. |
+| 06 | `06_analytics_views.sql` | `ROLE_BI_DEVELOPER` (verify as `ROLE_REPORTER`) | Build the model-ready `ANALYTICS` star-schema views Power BI reads (`docs/data-model.md`). |
+| 08 | `08_app_load_export.sql` | `ROLE_REPORTER` | Export the 153 clean feeders for the Fabric App's one-time import (`docs/app-notes.md`). |
+
+07 (the `SVC_POWERBI` reporter user) was run by hand in Snowsight and is not in
+the repo.
 
 ## Staging step (04 then 05)
 
