@@ -1,5 +1,13 @@
 # Changelog — brillit-report-standards
 
+## 0.3 — composite-model standards
+- Added a "Composite models (DirectQuery fact + Import dimensions)" section:
+  use `TREATAS` (not `RELATED`) across a limited cross-source relationship, and
+  cast DirectQuery datetime columns to date at the source.
+- Noted the two neighbouring model-build lessons (TOM-only `Int64` reverting on
+  refresh; Desktop writing the `$schema` lines) are agent rules in `AGENTS.md`,
+  not house design standards.
+
 ## 0.2 — brand from brillit.com
 - Brand tokens sampled from brillit.com: navy `#002f6e`, logo blue `#015a9c`, green `#00c18c`, heading navy `#193768`; Arial as the font.
 - Page framework now mirrors the website: white brand bar (logo + uppercase navigator) above a navy title band (title + slicers).
