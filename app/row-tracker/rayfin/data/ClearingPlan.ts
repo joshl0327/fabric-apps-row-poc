@@ -4,10 +4,11 @@ import { entity, authenticated, uuid, text, int, date, set } from '@microsoft/ra
 // a certainty picklist, a vendor dropdown, and a canonical district. Column
 // names mirror the Snowflake ANALYTICS layer (see root AGENTS.md "Model map").
 //
-// Permissions for this thin slice: any signed-in user may READ and UPDATE every
-// feeder. No create (rows arrive through the seed) and no delete. Per-row rules
-// — district managers edit their own district, an approved Entra group edits all
-// — come in a later step; see docs/app-notes.md.
+// Permissions: any signed-in user may READ and UPDATE every feeder. No create
+// (off — see the create note above the class) and no delete. Per-row role rules
+// (district managers edit their own district, an approved group edits all) were
+// scoped out of the POC — only id/email claims reach the deployed app; see
+// docs/app-notes.md.
 //
 // Cross-field rules (confirmed/tentative need a date, "next year" needs a
 // planned year and no date, TBD has no date) are NOT enforced here: Rayfin's
@@ -17,12 +18,12 @@ import { entity, authenticated, uuid, text, int, date, set } from '@microsoft/ra
 @entity()
 @authenticated('read')
 @authenticated('update')
-// CREATE IS TEMPORARILY ENABLED for the one-time feeder load (prompt 09): the
-// "Import feeders" control upserts the 153 clean feeders from the Snowflake
-// export. A FOLLOW-UP PR SWITCHES THIS BACK OFF (re-comment the line) and
-// redeploys, the same gated pattern as the seed. While it is on, any signed-in
-// user can insert rows — mitigated by dev-only synthetic data and the immediate
-// removal. See docs/app-notes.md + docs/decisions.md.
+// Create is OFF. It was briefly enabled once, through a gated PR pair, for the
+// one-time 153-feeder load into prod (the "Import feeders" control upserts from
+// the Snowflake export); it was switched back off in PR #32 after the load.
+// With no create grant the API exposes no createClearingPlan mutation. To run
+// the gated load again: uncomment the line below, deploy, import, then
+// re-comment and redeploy. See docs/app-notes.md + docs/decisions.md.
 // @authenticated('create')
 export class ClearingPlan {
   @uuid() id!: string;
@@ -66,8 +67,9 @@ export class ClearingPlan {
 
   // Who last changed the row and when. updated_at is a datetime (@date stores
   // ISO date/time). updated_by is set by the client from the signed-in session
-  // and is NOT audit-grade — a client can send any value. The change-log step
-  // will replace it with a server-stamped field. See docs/app-notes.md.
+  // and is NOT audit-grade — a client can send any value. It was not replaced;
+  // the trustworthy "who changed it" record is the append-only ChangeLog entity
+  // (its changed_by is server-pinned to the caller's email). See docs/app-notes.md.
   @text({ max: 200 }) updated_by!: string;
   @date() updated_at!: Date;
 }
