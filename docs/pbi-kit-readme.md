@@ -2,6 +2,8 @@
 
 Merged into the Fabric Apps POC repo (`fabric-apps-row-poc`). Works with Claude Code and GitHub Copilot CLI alongside Microsoft's `powerbi-authoring` plugin. The internal governance discussion doc that came with the original kit is kept out of this public repo.
 
+> **Note.** `themes/brand-tokens.json` now holds the real BrilliT brand values, not placeholders.
+
 | Path | What it is |
 |---|---|
 | `AGENTS.md` | Project instructions for any agent: hard rules, data boundary, stack, model map, conventions, guardrails |

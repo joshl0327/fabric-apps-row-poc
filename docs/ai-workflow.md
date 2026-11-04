@@ -1,5 +1,9 @@
 # AI-assisted Power BI workflow: semantic model → draft report
 
+> **Note.** The phase numbers here (Phase 0–7) are this report kit's own
+> workflow, not the POC's phase plan; the POC's Phases 6 and 7 were cut on
+> 2026-10-28 (see `docs/decisions.md`).
+
 The agent drafts on **fake data in a dev environment**; a Power BI developer promotes, vets on real data, and finishes. Each phase ends in a commit you can review or revert, and each prompt has a clear stopping point. Governance background is in an internal BrilliT discussion doc, kept out of this public repo.
 
 ```

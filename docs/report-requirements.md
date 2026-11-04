@@ -5,6 +5,10 @@ items came from reading the model and still need confirmation; *decided* items
 are settled (see `docs/decisions.md`). The report is built on the synthetic
 dev model; definitions must hold for real data too.
 
+> **Note.** Planning input, now historical: the "later phase" DirectQuery to the
+> app's data is done (see `docs/data-model.md`), and write-back was **cut on
+> 2026-10-28** (`docs/decisions.md`).
+
 ## Audience and purpose
 
 - Primary audience (*proposed*): vegetation management lead, district

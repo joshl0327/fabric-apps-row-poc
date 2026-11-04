@@ -1,10 +1,12 @@
-# Fabric App notes: ROW clearing tracker (thin slice)
+# Fabric App notes: ROW clearing tracker
 
-The first thin slice of the ROW clearing app, built on `app/row-tracker`
-(Microsoft "Basic Todo App" template, create-rayfin 1.36.2). It replaces the
-Todo entity with one feeder-plan entity, a list + edit form with a certainty
-picklist and vendor dropdown, the cross-field rules from
-`docs/cleaning-rules.md`, and a diagnostic claims panel. Synthetic data only.
+Build notes for `app/row-tracker` (Microsoft "Basic Todo App" template,
+create-rayfin 1.36.2), newest work at the bottom. It began as a thin slice —
+one feeder-plan entity with a list + edit form (certainty picklist, vendor
+dropdown), the cross-field rules from `docs/cleaning-rules.md`, and a diagnostic
+claims panel — and now also carries an append-only change log, a 153-feeder
+import, a DirectQuery link into the Power BI report, and a gated prod deploy.
+Each section below records a step. Synthetic data only.
 
 ## How the slice is built
 
@@ -90,9 +92,9 @@ and the `docker-local-dev` feature flag).
 
 > Superseded for population by **"Loading the 153 feeders (prompt 09)"** below —
 > that's the real load. This section documents the original 15-row seed pattern.
-> Note: as of prompt 09 `@authenticated('create')` is **committed enabled** for
-> the load window (a follow-up PR switches it off), so step 1 below is already
-> done on the current branch.
+> Note: `@authenticated('create')` is **off again** (PR #32, prompt 16) now that
+> the one-time prod load is complete; the gated create → import → revert pattern
+> ran and both gates are closed.
 
 The deployed app starts **empty** (`read`/`update` only, no create). To load the
 15 sample rows once, after the first deploy:
