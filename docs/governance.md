@@ -12,11 +12,11 @@ used with AI tools, and the dependency and supply-chain posture. Items marked
 - **The service principal is the only identity that deploys to prod.** The
   `gh-row-poc-deploy` Entra app, via a GitHub OIDC federated credential (no
   stored secret), is what `rayfin up` runs as against `ROW-POC-Prod`. No person
-  deploys from a laptop.
+  deploys to prod from a laptop.
 - **Monitors freely (read-only):** the **app development team**, **Cyber** and
   the **cloud/Fabric admin**, through:
-  - GitHub **read** access and the repository **Security** tab (code scanning,
-    secret scanning, Dependabot alerts once enabled);
+  - GitHub **read** access and the repository **Security** tab (secret
+    scanning, Dependabot alerts);
   - **Fabric workspace Viewer** on `ROW-POC-Prod`;
   - **Fabric audit logs** and **capacity monitoring**.
 
@@ -28,10 +28,16 @@ A change needs an **app-team review** when it crosses the tier boundary:
 - adding **create** or **delete** to an entity;
 - a new **runtime** dependency;
 - any change to `.github/workflows/` or the branch ruleset;
-- a new **external endpoint**.
+- a new **external endpoint**;
+- a change to the **agent guardrails** (the hard rules in `AGENTS.md`, and
+  `.claude/settings.json`).
 
 Everything inside the boundary — report and measure changes, UI, validation,
 dev-only tooling, docs — is **BI-team review only**.
+
+The boundary is a **policy; nothing enforces it yet**. A `CODEOWNERS` file
+covering the boundary paths, plus "require review from code owners" in the
+ruleset, would enforce it once the app team has access to the repo.
 
 ## Data for AI tools
 
@@ -69,7 +75,7 @@ Windows with Node v24.20.0 / npm 11.19.0, after `npm ci` then `npm run build`.
   stand in for their Linux counterparts.
 - **Bundle share by package** (source-map attribution): `react-dom` ~55%,
   `react-router` ~10%, app source ~10%, the `@microsoft/rayfin-*` packages
-  ~22% combined, the rest <2% each.
+  ~19% combined, the rest <2% each.
 - **Lines of hand-written code** vs the unmodified template commit `61c3371`
   (`src/` + `rayfin/`, excluding `.temp/` and the generated `tsconfig.json` /
   `.project.json` / `.lockfile.json` / `.gitignore`): template ≈ 1,067 lines;
@@ -86,11 +92,14 @@ Windows with Node v24.20.0 / npm 11.19.0, after `npm ci` then `npm run build`.
 - GitHub **secret scanning + push protection**.
 - **Required status checks** on `main` (`App build, test, lint` and
   `Report PBIR validate`) behind a required pull request.
+- The **dependency graph** and **Dependabot alerts** (enabled 2026-11-05).
+  Alerts are grouped **one per advisory, not one per package**, so their count
+  won't match the `npm audit` package counts one for one.
 
 **Not in place (follow-ups):**
 
 - a **dependency audit in CI**;
-- **Dependabot**.
+- **Dependabot version updates and security update PRs** (a later prompt).
 
 **Audit findings (same run as the footprint).** `npm audit`:
 
@@ -117,7 +126,8 @@ or the CI/deploy runner, never in the user's browser.
 
 ## Follow-ups
 
-- a **dependency audit in CI** and **Dependabot**;
+- a **dependency audit in CI** and **Dependabot version updates and security
+  update PRs** (a later prompt);
 - turn **password sign-in off** in `rayfin.yml` (the template default; the Rayfin
   docs say only Fabric sign-in works once the app is deployed);
 - a **per-environment `allowedRedirectUris`** list (the shared redirect URIs are
