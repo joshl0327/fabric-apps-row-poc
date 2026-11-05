@@ -11,8 +11,9 @@ on synthetic data only — no real cooperative, people, places or account number
 
 ## Environment ladder
 
-Each tier is more trusted than the one below, and nothing crosses a boundary
-without a human:
+Data flows down from the operational systems through an automated daily clone;
+the agent works only in the BI dev workspace; and nothing reaches the BI prod
+workspace without a human approval.
 
 1. **Operational systems** — the utility's systems of record. **Never touched**
    by this project.
@@ -49,9 +50,11 @@ The app and report, from the data model outward:
 
 ## Run it locally (no Fabric)
 
+Needs Node 24 (matches `.github/workflows/ci.yml`).
+
 ```bash
 cd app/row-tracker
-npm install            # first time only
+npm ci                 # first time only (uses the committed lockfile, like CI)
 npm run dev:frontend   # plain Vite: frontend only, synthetic auth, in-memory data
 ```
 

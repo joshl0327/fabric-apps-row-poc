@@ -16,7 +16,9 @@ Rayfin tutorial.
 - **Fewest operations.** An entity grants only the operations it needs. Default
   to `read` + `update`; add nothing speculatively.
 - **No `delete`.** One-off cleanups go through a direct, auditable SQL statement
-  in the Fabric SQL query editor, not an app delete grant.
+  in the Fabric SQL query editor, not an app delete grant. That statement
+  bypasses the app's `ChangeLog`, so record it in `docs/decisions.md` with the
+  statement, the row count and the reason — the `ChangeLog` won't show it.
 - **`create` only through a gated PR pair.** If a one-time load needs create,
   open it in one PR, run the load, then close it in a follow-up PR — never leave
   it on. With no create grant, DAB exposes no `create*` mutation at all.
