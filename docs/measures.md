@@ -16,6 +16,8 @@ since) move with the real date. Checked against the R1 profile in
 | 10 - Plan | % Plan Date Confirmed | Feeders with certainty "confirmed" ÷ Feeders in Plan. | `0.0%` | 92.8% (142 / 153) |
 | 10 - Plan | Feeders Next Year | Feeders with certainty "next year". | `#,0` | 2 |
 | 10 - Plan | Feeders TBD | Feeders with certainty "TBD". | `#,0` | 8 |
+| 10 - Plan | Feeders Without a Date | Feeders with certainty "next year" or "TBD" (no firm next-clearing date). Equals Feeders Next Year + Feeders TBD. Added for the row-command-center app (prompt 18). | `#,0` | 10 (2 + 8) |
+| 10 - Plan | % Plan Date Scheduled | Feeders with certainty "confirmed" or "tentative" ÷ Feeders in Plan. Shown as "Coverage" on the app's Today page. Added for the row-command-center app (prompt 18). | `0.0%` | 93.5% (143 / 153) |
 | 20 - Clearing Cycle | Feeders Overdue | Feeders with a real next-clearing date (confirmed or tentative, not blank) before today. | `#,0` | 14 |
 | 20 - Clearing Cycle | Line Miles Overdue | Line miles on the overdue feeders (same rule as Feeders Overdue). | `#,0.0` | 522.9 |
 | 20 - Clearing Cycle | Feeders Due Soon | Feeders whose next-clearing date falls from today through today + 90 days. | `#,0` | 10 |
@@ -48,6 +50,15 @@ since) move with the real date. Checked against the R1 profile in
 - **Base-measure reuse:** the percentage, overdue, due-soon and vendor measures
   all build on `Feeders in Plan` / `Line Miles in Plan` so a definition is
   written once.
+- **Command-center measures (prompt 18, added 2026-11-05).** `Feeders Without a
+  Date` and `% Plan Date Scheduled` were added for the `row-command-center` app
+  so its "Coverage" KPI and no-date list come from the model, not the app. Both
+  reuse `Feeders in Plan` and filter `FACT_ROW_PLAN[DATE_CERTAINTY]` like the
+  existing certainty measures. Validated live in Desktop against the composite
+  (DirectQuery) model: Without a Date 10 (next year 2 + TBD 8), Scheduled 93.5%
+  (143/153), and Scheduled + Without a Date = 153. The confirmed/tentative split
+  drifts with app edits (141/2 on 2026-11-05 vs 142/1 originally) but the
+  scheduled-vs-no-date split, and so both measures, is unchanged.
 - `DIM_CIRCUIT[LINE_MILES]` set to **don't summarize** so it is never implicitly
   summed on a visual; line miles always go through the measures.
 - **Composite-model rewrite (prompt 11, 2026-10-28).** After `FACT_ROW_PLAN`
