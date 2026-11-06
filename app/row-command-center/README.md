@@ -1,52 +1,97 @@
+# ROW Command Center
 
-# Fabric Apps - Analytics Template
+A **second** Fabric App in this repo (after `app/row-tracker`), built to show what
+a BI team can stand up quickly once the guardrails are in place. It is the
+"analyst front end" over the **same data as the Power BI report**:
 
-> **⚠️ This repository is under active development.** Features and instructions may change.
+> **One set of data, one semantic model, two front ends.** Every number and
+> status comes from the **same published semantic model** as the report
+> (`row_pbi_poc` in `ROW-POC-Dev`), queried with DAX through the **semantic model
+> connector**. Edits go to the **same Fabric SQL database** the first app uses
+> (`row-tracker`, `dbo.ClearingPlans` / `dbo.ChangeLogs`) through a **SQL database
+> connector**. The app calculates nothing itself, so it can't disagree with the
+> report. An edit here shows up in the first app's history, in the report, and
+> back on this app's landing page.
 
-This is a starter template for building Fabric Apps - Analytics web apps. Clone this repo locally and follow the steps below to get started.
+Synthetic data only. Dev workspace `ROW-POC-Dev` only.
 
-View our [Microsoft Learn documentation](https://learn.microsoft.com/fabric/apps/data-apps-template) for more information!
+## Pages
 
+| Page | What it shows | Source |
+|---|---|---|
+| **Today** | KPI cards — Feeders in Plan, Coverage (`% Plan Date Scheduled`), Overdue, Due Soon, Without a Date, DQ Issues. Each card opens the matching feeders. | Model measures (DAX). Card lists come from DAX by `Clearing Status` / certainty, never TS filtering. |
+| **Feeders** | Every feeder in one grid (`fabric-datagrid`) — feeder, circuit, substation, district, vendor, certainty, next date, planned year, line miles, status. Slicers + text search + sort in the browser. Row opens the side panel. | One DAX query joining the dimensions. |
+| **Activity** | Every `ChangeLogs` row, newest first, filterable by person, date range and feeder; each change as *field: old → new*. | SQL connector. Includes edits made in the first app (shared table). |
+| **Schedule** | Next 12 months of clearing, by month and vendor (`fabric-visuals` Vega stacked bar), plus a clickable upcoming-feeders list. | DAX (month×vendor and a per-feeder upcoming query). |
 
-## Prerequisites
+Clicking a feeder anywhere opens a **side panel**: details, the **edit form**
+(same field + cross-field rules as the first app), and that feeder's **history**.
+A save runs the read-back guard, writes one `ChangeLog` row, and refreshes the
+grid and KPIs.
 
-1. **Node.js (v22)**: Download and install from https://nodejs.org/dist/v22.22.2/node-v22.22.2-x64.msi
-2. **GitHub Copilot CLI**: Refer to https://github.com/github/copilot-cli
-3. **Fabric account**: A Microsoft Entra account with access to the Fabric workspace and the semantic model. You sign in through the project's own Rayfin CLI (see the steps below); the Azure CLI is not required.
+## The two connectors
 
-## Instructions for building a new web app
+Declared in `rayfin/rayfin.yml`, both scoped to `ROW-POC-Dev`:
 
-1. **Open Terminal**: Open Terminal in the local folder where you want to clone this repo and create your app.
-1. **Clone this repo**: Run `git clone <REPO_URL> <repo_name>`. Replace `<REPO_URL>` with this repository's URL and `<repo_name>` with the name you want for your project folder.
-1. **Navigate to the repo folder**: Run `cd <repo_name>`. (Optional: Run `code` to open VS Code in that folder and open Terminal inside VS Code.)
-1. **Install dependencies**: Run `npm install`.
-1. **Sign in**: Run `npx rayfin login`, and confirm with `npx rayfin login status`. Copilot queries your semantic model through this sign-in.
-1. **Launch Copilot**: Run `copilot` to start the Copilot CLI. Then type a prompt for what you want to build. Include the dataset ID of the semantic model (from Power BI Service) that you want to use and the URI of the Fabric workspace where the app should be provisioned. (To get the dataset ID, copy the value between `...dataset/` and `/overview...` from the URL.)
-1. **Preview your app**: After Copilot is done, run `npm run dev` and leave the development server running.
-1. **Open Fabric shell**: Navigate to the workspace in Fabric portal and open the artifact. Then append `&devUri=http://localhost:5173` at the end. This allows you to preview your app.
-1. **Deploy or update the app**: When you are ready to publish the latest changes, run `npx rayfin up --workspace-uri "<workspace-uri>"` using your Fabric workspace URL. Users with access to that workspace can then open the updated app.
+- **`row_pbi_poc`** — `fabric-semanticmodel` (Category B), `executeQuery` only,
+  **delegated** auth. DAX built by `src/lib/dax/queries.ts` (safe DAX only).
+- **`row-tracker`** — `fabric-sqldatabase` (Category A), **delegated** auth,
+  operations narrowed to `read, create, update` (no delete). Entities generated
+  for `ClearingPlans` (read + update) and `ChangeLogs` (read + create, with a
+  create policy pinning `changed_by` to the caller's email). `Users` and
+  `storage.objects` are deliberately not generated.
 
-<details>
-<summary><strong>💡 Tips</strong></summary>
+## Local run (no Fabric)
 
-- Use **Shift + Tab** in Copilot to switch to **Plan mode**, where Copilot will present a plan and ask for confirmation before writing any code.
+```bash
+cd app/row-command-center
+npm install        # first time
+npm run dev:frontend
+```
 
-</details>
+Plain Vite — no Fabric, no backend. A DEV-only stand-in sign-in
+(`LocalAuthService`) resolves instantly to a synthetic user, and the data comes
+from in-memory synthetic fixtures (`src/services/local-backend.ts`,
+`src/lib/analytics-fixture.ts`). Both are gated behind `isLocalBackend()` and
+tree-shaken from production builds.
 
-<details>
-<summary><strong>📝 Example prompts</strong></summary>
+**Only verifiable after a dev deploy:** real DAX against the published model,
+real SQL reads/writes, the live edit→report loop, and Fabric SSO. Locally the
+DAX-side numbers are **static fixtures** (they do not recompute when you edit a
+feeder — the app holds no business logic to recompute them); the SQL-side feeder
+list, edit and history **are** live in memory.
 
-> When using any example below, include the semantic model ID and the URI of the Fabric workspace where the app should be provisioned. Ex. `Semantic model ID: 12345678-1234-1234-1234-123456789abc Fabric workspace: https://fabric.microsoft.com/groups/12345678-1234-1234-1234-123456789abc`
+## Deep links
 
-- `Create a sales performance dashboard using the "Contoso Sales" semantic model. Include revenue KPIs, a monthly trend line chart, top 10 stores by profit, and a regional breakdown bar chart.`
-- `Build an executive summary app for the "HR Analytics" model with headcount by department, attrition rate trends over the past 3 years, and a data grid of open positions sorted by days-to-fill.`
-- `I want a customer insights app. Show customer lifetime value distribution, churn risk segmentation, and a filterable table of top accounts.`
-- `Create a supply chain monitoring dashboard from the "Logistics Ops" model. I need inventory levels by warehouse, on-time delivery rate KPIs, and a heatmap of shipping delays by region and month.`
-- `Build a financial reporting app using the "GL Financials" semantic model with a P&L summary, expense breakdown by cost center, and quarter-over-quarter variance charts. Add a date range filter across all visuals.`
+`?feeder=<id>` opens that feeder's panel on load. The id is validated against the
+feeder pattern (`^[0-9]{1,5}-[0-9]{1,3}$`) before use, so a crafted URL can't
+reach a query.
 
-</details>
+```
+https://<app-host>/?feeder=214-1
+```
 
+A Power BI button (Web URL action) can link straight to a feeder with this
+format. (The report is not changed by this app.)
 
-## Need help?
+## Known gaps / rough edges (first iteration)
 
-If you have any questions or run into any problems, please [file an issue](../../issues) on this repository.
+- **Duplicated rules.** `src/services/validation.ts`, `errors.ts` and
+  `changeLogModel.ts` are copied from `app/row-tracker` — two apps can't share
+  code without a shared package (out of scope). A rule change must be made in
+  both apps in the same PR. See `docs/governance.md`.
+- **Cross-field rules are form-only** (same finding as the first app): a direct
+  API write could still store an inconsistent row until a server-side Function
+  exists.
+- **Local DAX fixtures are static** — a local edit updates the SQL store and the
+  panel/history but not the fixture KPIs/status. The live recompute is a Fabric
+  behaviour.
+- **Per-locale chunks still ship.** The app loads only `en` at runtime, but
+  `@microsoft/fabric-visuals-core` still code-splits ~45 per-locale chunks into
+  `dist/` from its own dynamic imports; dropping them would mean overriding the
+  vendor's imports, so they're left (lazy, never fetched in this English app).
+- **Schedule bar chart isn't click-wired** (it's aggregated by month/vendor); the
+  per-feeder list beneath it is the drill-to-panel path.
+- **The scaffold shipped `.github/workflows/codeql.yml`** inside the app folder;
+  nested workflows are inert (GitHub only runs repo-root workflows). Left as a
+  template artifact; a candidate to remove.
