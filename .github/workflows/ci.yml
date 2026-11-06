@@ -76,6 +76,13 @@ jobs:
       # prebuild step (`rayfin env --framework vite`) makes no Fabric call.
       - name: Build
         run: npm run build
+      # Parse every shipped JS chunk the way `rayfin up` does (node --check).
+      # Catches an un-lowered-syntax bundle (e.g. raw TC39 decorators) that
+      # builds cleanly but would deploy as a blank page. Fails on any parse error.
+      - name: Check bundle is parseable
+        run: |
+          set -e
+          for f in dist/assets/*.js; do node --check "$f"; done
       - name: Test
         run: npm test
       - name: Lint

@@ -13,6 +13,12 @@ export default defineConfig({
         environment: "jsdom",
         setupFiles: ["src/test/setup.ts"],
         globals: true,
+        // Tests always run in the synthetic local backend, regardless of any
+        // .env.local a `rayfin env` / `rayfin up` wrote: force VITE_RAYFIN_API_URL
+        // empty so isLocalBackend() is deterministically true. Without this, a
+        // populated .env.local flips the services to the Fabric branch and the
+        // local-mode tests fail.
+        env: { VITE_RAYFIN_API_URL: "" },
     },
     resolve: {
         alias: { "@": resolve(import.meta.dirname, "src") },
