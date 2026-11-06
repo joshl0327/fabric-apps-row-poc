@@ -48,6 +48,39 @@ jobs:
       - name: Lint
         run: npm run lint
 
+  command-center:
+    # Second Fabric App (prompt 18). Same steps as the `app` job, own job name —
+    # select it as a required check in the ruleset. Adding this job crosses the
+    # governance tier boundary (a .github/workflows change), so it needs app-team
+    # review (docs/governance.md).
+    name: Command Center build, test, lint
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: app/row-command-center
+    env:
+      RAYFIN_TELEMETRY_OPTOUT: '1'
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24' # matches the project's local Node (v24.20)
+          cache: npm
+          cache-dependency-path: app/row-command-center/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      # Build first: the connector permission test imports the tsc-compiled
+      # entities from rayfin/.temp/compiled, which `npm run build` produces. The
+      # prebuild step (`rayfin env --framework vite`) makes no Fabric call.
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+      - name: Lint
+        run: npm run lint
+
   report:
     # Job name shown in the checks list — select this exact name as a required
     # check in the ruleset.

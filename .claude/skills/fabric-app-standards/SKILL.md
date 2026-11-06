@@ -1,6 +1,6 @@
 ---
 name: fabric-app-standards
-description: House practices for a BI-owned Fabric App (Rayfin SDK/CLI, TypeScript) in app/row-tracker — entity permissions, append-only audit, form-side cross-field rules, save read-back, feature-flag gating, the import/migration pattern, a PR footprint line, and the data boundary. Load only for Fabric App work in app/row-tracker; for Power BI reports use brillit-report-standards, for the semantic model use semantic-model-authoring.
+description: House practices for a BI-owned Fabric App (Rayfin SDK/CLI, TypeScript) under app/* (app/row-tracker and app/row-command-center) — entity/connector permissions, append-only audit, form-side cross-field rules, save read-back, feature-flag gating, the import/migration pattern, a PR footprint line, and the data boundary. Load for Fabric App work in any app/* folder; for Power BI reports use brillit-report-standards, for the semantic model use semantic-model-authoring.
 ---
 
 # Fabric App standards (BI-owned)

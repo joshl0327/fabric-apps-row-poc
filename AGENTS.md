@@ -24,7 +24,8 @@ data only.
 | `docs/` | Decisions, cleaning rules, requirements, data model, measures, POC log, run sheet, plus governance, deploy and CI notes |
 | `tests/dax/` | DAX profiling and measure validation queries |
 | `_brief/` | Report spec written by the report planner |
-| `app/row-tracker/` | Fabric App (Rayfin SDK/CLI, TypeScript). ROW clearing tracker slice — see the "Fabric App" section below and `docs/app-notes.md`. |
+| `app/row-tracker/` | First Fabric App (Rayfin SDK/CLI, TypeScript). ROW clearing tracker slice — see the "Fabric App" section below and `docs/app-notes.md`. |
+| `app/row-command-center/` | Second Fabric App (prompt 18). Analyst front end over the **same** semantic model (DAX) and the **same** Fabric SQL database as the first app, via connectors. See the "Fabric App" section below, `app/row-command-center/README.md` and `docs/app-notes.md`. |
 
 For Power BI, the agent takes the semantic model to a **draft** report. A
 Power BI developer (me) reviews, adjusts and signs off.
@@ -225,11 +226,21 @@ The report spec lives in `_brief/report-spec.md`.
 
 ## Fabric App
 
-The app lives in `app/row-tracker` (Rayfin SDK/CLI, TypeScript). Work there, and
-read `app/row-tracker/AGENTS.md` and `app/row-tracker/.agents/skills/rayfin/`
-for Rayfin specifics. **Where the app's `AGENTS.md` and this root file disagree,
-this file wins.** `docs/app-notes.md` is the slice's build notes and open
-questions.
+There are **two** Fabric Apps (Rayfin SDK/CLI, TypeScript), both under `app/`:
+
+- `app/row-tracker` — the first app (editor slice).
+- `app/row-command-center` — the second app (prompt 18): an analyst front end
+  that reads the **same published semantic model** with DAX (semantic-model
+  connector) and writes the **same Fabric SQL database** (SQL connector) as the
+  first app. See `app/row-command-center/README.md`.
+
+Work in the relevant app folder, and read its `AGENTS.md` and
+`.agents/skills/rayfin/` for Rayfin specifics. **Where an app's `AGENTS.md` and
+this root file disagree, this file wins.** `docs/app-notes.md` is the build notes
+and open questions for both. Everything in this section applies to **both apps**
+(substitute the app folder); the two share the ClearingPlans/ChangeLogs tables,
+so their write rules and the `changed_by` pin must stay in step and a change to
+either is a tier-boundary change (`docs/governance.md`).
 
 - **Rayfin docs:** read them from `node_modules` first (the skill files point
   the way); if a lookup is still needed, run `npx rayfin docs ...` from

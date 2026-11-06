@@ -43,3 +43,23 @@ long it took. Record agent time and review time separately.
 ## Changes made to the standards or AGENTS.md during the POC
 
 -
+
+## Prompt 18 — ROW Command Center (second Fabric App), 2026-11-06
+
+Agent time (the point of this build — one BI-owned agent standing up a second
+app over the same model/DB):
+
+- **Part A (scaffold, connectors, measures, prove the DAX path):** ~1.0 h agent
+  time. Scaffolded `dataapp`; added both connectors (semantic model + SQL,
+  delegated, narrowed); added two measures (validated live); proved the DAX path
+  with `connector invoke` (KPIs + per-feeder status). Human: ran `rayfin login`,
+  opened/saved Desktop, checked the measures. Republish to ROW-POC-Dev pending at
+  Checkpoint 2.
+- **Part B (entities, services, four pages, trim, CI, docs):** ~2.5 h agent time.
+  Generated the two connector entities + permission test; safe DAX layer;
+  data services (connector + local, read-back, change log); Today / Feeders /
+  Activity / Schedule pages with the template's visuals; DEV-only local sign-in +
+  fixtures; trimmed (lazy-load, removed framer-motion, English-only); CI job;
+  docs. `npm run build` / `npm test` (149) / `npm run lint` green.
+- **Human fixes needed:** screenshots from the local run (no browser in the agent
+  environment); dev deploy + the live edit→report loop; the republish gate.
