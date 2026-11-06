@@ -5,12 +5,10 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-import { EmptyStatePreview } from "./EmptyStatePreview";
+import { AppShell } from './app/AppShell';
 
-// Replace `<EmptyStatePreview />` with your dashboard, remove the import
-// above, and delete `EmptyStatePreview.tsx` and `empty-state-preview-world-map.png`.
 function App() {
-    return <EmptyStatePreview />;
+    return <AppShell />;
 }
 
 export default App;

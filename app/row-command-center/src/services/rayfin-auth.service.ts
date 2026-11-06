@@ -13,6 +13,8 @@ import {
     type FabricAuthOptions,
 } from "@microsoft/rayfin-auth-provider-fabric";
 import { getRayfinClient } from "@/lib/rayfin-client";
+import { isLocalBackend } from "@/services/local-backend";
+import { LocalAuthService } from "@/services/local-auth.service";
 
 export interface IAuthService {
     /**
@@ -48,6 +50,13 @@ export interface IAuthService {
  * - `VITE_FABRIC_PORTAL_URL` — Fabric portal base URL
  */
 export function bootstrapAuth(): IAuthService {
+    // DEV-only: `npm run dev:frontend` has no Fabric config, so use the synthetic
+    // local sign-in. import.meta.env.DEV is false in production builds, so this
+    // branch (and LocalAuthService) is tree-shaken from the shipped bundle.
+    if (import.meta.env.DEV && isLocalBackend()) {
+        return new LocalAuthService();
+    }
+
     const client = getRayfinClient();
 
     const workspaceId = import.meta.env.VITE_FABRIC_WORKSPACE_ID;
