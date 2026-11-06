@@ -1,0 +1,283 @@
+{
+  "source": "row-tracker",
+  "connector": "fabric-sqldatabase",
+  "connectionString": "aamwmf5kappu5cb5sdfmnrhns4-55cuhftk7t3ernmkkh7w2xla5e.database.fabric.microsoft.com",
+  "discoveredAt": "2026-11-05T17:18:33.301Z",
+  "schemas": [
+    {
+      "schemaName": "dbo",
+      "tables": [
+        {
+          "tableName": "ChangeLogs",
+          "columns": [
+            {
+              "columnName": "id",
+              "dataType": "uniqueidentifier",
+              "isNullable": false,
+              "default": "(newid())"
+            },
+            {
+              "columnName": "action",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 6
+            },
+            {
+              "columnName": "after_json",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 2000
+            },
+            {
+              "columnName": "before_json",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 2000
+            },
+            {
+              "columnName": "changed_at",
+              "dataType": "datetime2",
+              "isNullable": false,
+              "datePrecision": 7
+            },
+            {
+              "columnName": "changed_by",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 200
+            },
+            {
+              "columnName": "feeder_id",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 20
+            },
+            {
+              "columnName": "reason",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 250
+            }
+          ],
+          "primaryKeyColumns": [
+            "id"
+          ]
+        },
+        {
+          "tableName": "ClearingPlans",
+          "columns": [
+            {
+              "columnName": "id",
+              "dataType": "uniqueidentifier",
+              "isNullable": false,
+              "default": "(newid())"
+            },
+            {
+              "columnName": "date_certainty",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 9
+            },
+            {
+              "columnName": "district_name",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 100
+            },
+            {
+              "columnName": "feeder_id",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 20
+            },
+            {
+              "columnName": "last_cleared_date",
+              "dataType": "datetime2",
+              "isNullable": true,
+              "datePrecision": 7
+            },
+            {
+              "columnName": "last_work_done",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 200
+            },
+            {
+              "columnName": "next_clearing_date",
+              "dataType": "datetime2",
+              "isNullable": true,
+              "datePrecision": 7
+            },
+            {
+              "columnName": "notes",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 500
+            },
+            {
+              "columnName": "planned_year",
+              "dataType": "int",
+              "isNullable": true,
+              "precision": 10,
+              "scale": 0
+            },
+            {
+              "columnName": "updated_at",
+              "dataType": "datetime2",
+              "isNullable": false,
+              "datePrecision": 7
+            },
+            {
+              "columnName": "updated_by",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 200
+            },
+            {
+              "columnName": "vendor",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 28
+            }
+          ],
+          "primaryKeyColumns": [
+            "id"
+          ]
+        },
+        {
+          "tableName": "Users",
+          "columns": [
+            {
+              "columnName": "Id",
+              "dataType": "uniqueidentifier",
+              "isNullable": false,
+              "default": "(newid())"
+            },
+            {
+              "columnName": "Email",
+              "dataType": "varchar",
+              "isNullable": false,
+              "maxLength": 255
+            }
+          ],
+          "primaryKeyColumns": [
+            "Id"
+          ]
+        }
+      ]
+    },
+    {
+      "schemaName": "storage",
+      "tables": [
+        {
+          "tableName": "objects",
+          "columns": [
+            {
+              "columnName": "id",
+              "dataType": "uniqueidentifier",
+              "isNullable": false,
+              "default": "(newsequentialid())"
+            },
+            {
+              "columnName": "cache_control",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 128
+            },
+            {
+              "columnName": "content_disposition",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 255
+            },
+            {
+              "columnName": "content_type",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 255
+            },
+            {
+              "columnName": "created_at",
+              "dataType": "datetime2",
+              "isNullable": false,
+              "datePrecision": 3,
+              "default": "(sysutcdatetime())"
+            },
+            {
+              "columnName": "etag",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 128
+            },
+            {
+              "columnName": "folder",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 128
+            },
+            {
+              "columnName": "last_accessed_at",
+              "dataType": "datetime2",
+              "isNullable": true,
+              "datePrecision": 3
+            },
+            {
+              "columnName": "name",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 1024,
+              "computed": "((right([path],charindex('/',reverse([path])+'/')-(1))) collate Latin1_General_100_BIN2)"
+            },
+            {
+              "columnName": "operation_id",
+              "dataType": "nvarchar",
+              "isNullable": true,
+              "maxLength": 64
+            },
+            {
+              "columnName": "owner_id",
+              "dataType": "uniqueidentifier",
+              "isNullable": false
+            },
+            {
+              "columnName": "path",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 1024
+            },
+            {
+              "columnName": "size",
+              "dataType": "bigint",
+              "isNullable": false,
+              "precision": 19,
+              "scale": 0
+            },
+            {
+              "columnName": "status",
+              "dataType": "nvarchar",
+              "isNullable": false,
+              "maxLength": 16,
+              "default": "(N'active')"
+            },
+            {
+              "columnName": "updated_at",
+              "dataType": "datetime2",
+              "isNullable": false,
+              "datePrecision": 3,
+              "default": "(sysutcdatetime())"
+            },
+            {
+              "columnName": "user_metadata",
+              "dataType": "json",
+              "isNullable": true,
+              "maxLength": -1
+            }
+          ],
+          "primaryKeyColumns": [
+            "id"
+          ]
+        }
+      ]
+    }
+  ]
+}
