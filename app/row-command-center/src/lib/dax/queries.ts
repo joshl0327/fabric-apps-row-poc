@@ -70,7 +70,7 @@ ROW (
     "FeedersDueSoon", [Feeders Due Soon],
     "FeedersOverdue", [Feeders Overdue],
     "Coverage", [% Plan Date Scheduled],
-    "DQIssues", [DQ Issues]
+    "FeedersWithDqIssues", [Feeders with DQ Issues]
 )`;
 }
 

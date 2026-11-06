@@ -25,7 +25,9 @@ export interface Kpis {
   overdue: number;
   /** % Plan Date Scheduled, 0..1. */
   coverage: number;
-  dqIssues: number;
+  /** [Feeders with DQ Issues] — affected in-plan feeders (63), NOT the raw issue
+   * count [DQ Issues] (69). Matches the card label and its drill-down. */
+  feedersWithDqIssues: number;
 }
 
 /** One cell of the Schedule chart: feeders due in a month, by vendor. */

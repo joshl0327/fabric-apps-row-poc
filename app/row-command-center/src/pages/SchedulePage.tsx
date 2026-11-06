@@ -34,7 +34,10 @@ export default function SchedulePage() {
     $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
     mark: 'bar',
     encoding: {
-      x: { field: 'month', type: 'nominal', sort: { field: 'monthSort' }, title: 'Month' },
+      // Chronological, earliest first: order the month labels by the numeric
+      // Year-Month-Sort key, not alphabetically. Vega-Lite needs an aggregate op
+      // when sorting a nominal field by another field.
+      x: { field: 'month', type: 'nominal', sort: { field: 'monthSort', op: 'min' }, title: 'Month' },
       y: { field: 'feeders', type: 'quantitative', aggregate: 'sum', title: 'Feeders due' },
       color: { field: 'vendor', type: 'nominal', title: 'Vendor' },
       tooltip: [

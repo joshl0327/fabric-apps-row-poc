@@ -15,7 +15,7 @@ const CARDS: { id: CardId; subtitle: string; value: (k: Awaited<ReturnType<typeo
   { id: 'overdue', subtitle: 'Past due, real date', value: (k) => k.overdue, format: '#,0' },
   { id: 'dueSoon', subtitle: 'Within 90 days', value: (k) => k.dueSoon, format: '#,0' },
   { id: 'withoutDate', subtitle: 'Next year or TBD', value: (k) => k.withoutDate, format: '#,0' },
-  { id: 'dqIssues', subtitle: 'Logged from the source', value: (k) => k.dqIssues, format: '#,0' },
+  { id: 'dqIssues', subtitle: 'Affected in-plan feeders', value: (k) => k.feedersWithDqIssues, format: '#,0' },
 ];
 
 export default function TodayPage() {

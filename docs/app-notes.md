@@ -441,6 +441,25 @@ ends.** `app/row-tracker` is unchanged. Full detail in
   dependency); a CI step now runs `node --check` over every `dist/assets/*.js`
   (the same parse `rayfin up` does) so this can't regress. See `docs/decisions.md`
   (2026-11-06). The local run and a clean bundle are verified after this fix.
+- **Live test on ROW-POC-Dev (2026-11-06) — passed.** After the bundle fix and a
+  dev deploy, the edit→report loop worked end to end: a **TBD feeder set to
+  confirmed with a future date** moved **Without a Date 10 → 9** and **Coverage
+  93.5% → 94.1%** (confirmed by `connector invoke`: Feeders in Plan 153, Without a
+  Date 9, Coverage 0.9412, Feeders with DQ Issues 63). The edit appeared in
+  **Activity**, in the **first app's dev History**, and in the **report after a
+  refresh**, and `ChangeLogs.changed_by` was the **signed-in user's email**
+  (server-pinned). The live test surfaced three UI bugs, all fixed without
+  redeploying (see `docs/decisions.md`, 2026-11-06):
+  1. the Feeders grid dropped 8 of 10 columns — the `DataGrid` `columns` prop
+     listed only two (feeder, line miles); DataGrid renders exactly the columns
+     given. The DAX→grid *mapping* was correct (verified against the live
+     table-prefixed column names) and is now locked by a test.
+  2. the "Feeders with DQ Issues" card showed `[DQ Issues]` (69); switched to
+     `[Feeders with DQ Issues]` (63) to match the label and its drill-down (the
+     report's Data Quality page keeps the two distinct; Plan Overview uses
+     neither).
+  3. the Schedule chart sorted months alphabetically; now ordered chronologically
+     by the numeric Year-Month-Sort key.
 - **Open / live-only:** real DAX + SQL, the live edit→report loop, and Fabric SSO
   are verifiable only after a dev deploy. The Schedule bar chart isn't click-wired
   (aggregated); per-locale chunks still ship from `fabric-visuals-core`.
