@@ -222,3 +222,31 @@ BrilliT standards and AGENTS.md. Triage:
 - **English-only at runtime**; per-locale chunks still emitted by
   `fabric-visuals-core` and left in place (removing them would override the
   vendor — out of scope).
+
+## 2026-11-06 — Command Center bundle fix: lower connector decorators in Vite
+
+- **Problem.** `rayfin up` to ROW-POC-Dev failed before upload: "The built bundle
+  is not parseable JavaScript." The Category-A connector pattern pulls the
+  decorated entity classes (`ClearingPlans`, `ChangeLogs`) into the browser bundle
+  via `connectorConfig.entities`, and Vite 8's rolldown/oxc transformer passed
+  their TC39 (stage-3) decorators through **un-lowered** — invalid JS. This also
+  broke `npm run dev:frontend`. `build`/`test`/`lint` were green and missed it
+  (vite build doesn't check parseability; `tsc` only compiles the separate
+  `rayfin/.temp/compiled` copy used by the permission test).
+- **Fix.** A `vite.config.ts` plugin (`lower-connector-decorators`, `enforce:
+  'pre'`) runs `rayfin/connectors/**/*.ts` through `typescript`'s
+  `transpileModule` (stage-3 lowering) before oxc. **No new dependency**
+  (`typescript` is already a devDependency); initial bundle +~7 kB raw, gzip
+  unchanged; dev and prod both fixed. Rejected: a Babel decorator plugin (new
+  deps), importing the `tsc`-compiled `.js` into the browser (breaks
+  `dev:frontend`, which runs no `tsc`), and dropping `connectorConfig.entities`
+  (the runtime needs it for the camelCase→column mapping).
+- **Guard.** The Command Center CI job now has a "Check bundle is parseable" step
+  after the build: `node --check` over every `dist/assets/*.js` — the same parse
+  `rayfin up` does — failing the job on any error, so an un-lowered-syntax bundle
+  can't reach a deploy again.
+- **Test determinism (same change).** The failed `rayfin up` (and `rayfin env`)
+  wrote `VITE_RAYFIN_API_URL` into `.env.local`, which flipped `isLocalBackend()`
+  to false in the test env and made the local-mode tests take the Fabric branch
+  and fail. `vitest.config.ts` now forces `VITE_RAYFIN_API_URL=""` so tests always
+  run against the synthetic local backend regardless of any `.env.local`.

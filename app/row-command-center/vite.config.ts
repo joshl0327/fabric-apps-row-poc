@@ -9,8 +9,35 @@ import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type PluginOption } from "vite";
 import license from "rollup-plugin-license";
+import ts from "typescript";
 
 import { resolve } from 'path';
+
+// Lower the connector entities' TC39 (stage-3) decorators before bundling.
+// rolldown/oxc passes them through raw, which is invalid JS — it both breaks the
+// dev browser and fails `rayfin up`'s bundle parse check (prompt 18, 2026-11-06).
+// TypeScript (already a devDependency) lowers them, the same transform the
+// connector permission test relies on. Scoped to the connector entity files.
+const lowerConnectorDecorators: PluginOption = {
+  name: 'lower-connector-decorators',
+  enforce: 'pre',
+  transform(code, id) {
+    const file = id.split('?')[0];
+    if (!/[\\/]rayfin[\\/]connectors[\\/].*\.ts$/.test(file)) return null;
+    const out = ts.transpileModule(code, {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        useDefineForClassFields: true,
+        experimentalDecorators: false,
+        sourceMap: true,
+      },
+      fileName: file,
+    });
+    return { code: out.outputText, map: out.sourceMapText ? JSON.parse(out.sourceMapText) : null };
+  },
+};
 
 const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
 
@@ -44,6 +71,7 @@ const localNetworkAccessPlugin: PluginOption = {
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [
+        lowerConnectorDecorators,
         react(),
         tailwindcss(),
         localNetworkAccessPlugin,

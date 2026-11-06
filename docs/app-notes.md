@@ -429,6 +429,18 @@ ends.** `app/row-tracker` is unchanged. Full detail in
 - **Local run:** `npm run dev:frontend` (plain Vite) with a DEV-only synthetic
   sign-in and in-memory fixtures; DAX-side numbers are static fixtures offline.
 - **Checks:** `npm run build`, `npm test` (149 tests), `npm run lint` all pass.
+- **Correction (2026-11-06).** The Checkpoint 2 claim that the local run worked
+  was wrong. At Checkpoint 2 the app built, tested and linted green, **but the
+  shipped bundle and `dev:frontend` were actually broken**: rolldown/oxc passed
+  the connector entities' TC39 decorators through un-lowered, so the production
+  bundle was unparseable JavaScript (`rayfin up` caught it: "The built bundle is
+  not parseable JavaScript") and `dev:frontend` would have rendered a blank page.
+  `tsc -b && vite build` exited 0 because `vite build` never checks parseability
+  and `tsc` only compiles the separate `rayfin/.temp/compiled` copy. Fixed by a
+  `vite.config.ts` plugin that lowers those decorators with TypeScript (no new
+  dependency); a CI step now runs `node --check` over every `dist/assets/*.js`
+  (the same parse `rayfin up` does) so this can't regress. See `docs/decisions.md`
+  (2026-11-06). The local run and a clean bundle are verified after this fix.
 - **Open / live-only:** real DAX + SQL, the live edit→report loop, and Fabric SSO
   are verifiable only after a dev deploy. The Schedule bar chart isn't click-wired
   (aggregated); per-locale chunks still ship from `fabric-visuals-core`.
