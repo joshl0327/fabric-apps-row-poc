@@ -90,7 +90,7 @@ describe('static queries reference only model measures', () => {
       '[Feeders Due Soon]',
       '[Feeders Overdue]',
       '[% Plan Date Scheduled]',
-      '[DQ Issues]',
+      '[Feeders with DQ Issues]',
     ]) {
       expect(q).toContain(m);
     }

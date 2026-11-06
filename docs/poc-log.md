@@ -63,3 +63,20 @@ app over the same model/DB):
   docs. `npm run build` / `npm test` (149) / `npm run lint` green.
 - **Human fixes needed:** screenshots from the local run (no browser in the agent
   environment); dev deploy + the live edit→report loop; the republish gate.
+
+## Prompt 18 — live test on ROW-POC-Dev + fixes (2026-11-06)
+
+- **Live edit→report loop: passed.** After the decorator bundle fix and a dev
+  deploy, a TBD feeder set to **confirmed with a future date** moved
+  **Without a Date 10 → 9** and **Coverage 93.5% → 94.1%**. The edit showed up in
+  the command center's **Activity**, in the **first app's dev History**, and in
+  the **Power BI report after a refresh**; `ChangeLogs.changed_by` was the
+  signed-in user's email (server-pinned). One model, one SQL DB, two front ends —
+  verified live.
+- **Three UI bugs found live, fixed without redeploy** (~0.5 h agent time):
+  Feeders grid showed only 2 of 10 columns (DataGrid `columns` prop listed two;
+  mapping was correct and is now test-locked); the DQ card showed `[DQ Issues]`
+  (69) under a "Feeders with DQ Issues" label → switched to
+  `[Feeders with DQ Issues]` (63); the Schedule chart sorted months
+  alphabetically → now chronological. Human fix needed: the live test itself
+  (deploy + exercise) and spotting the three UI issues.

@@ -8,6 +8,8 @@ import { useAsync } from '@/hooks/use-async';
 import { useFeederPanel } from '@/app/feeder-context';
 import { getFeederGrid } from '@/lib/analytics';
 import type { GridRow } from '@/lib/analytics-types';
+import { StatusBadge } from '@/components/StatusBadge';
+import { GRID_COLUMNS } from './feeders-columns';
 
 const ALL = '(all)';
 
@@ -75,23 +77,37 @@ export default function FeedersPage() {
     [filtered],
   );
 
+  // Built from the shared GRID_COLUMNS list (tested to cover every toGridRow
+  // field, so no column silently drops). DataGrid renders exactly the columns
+  // given; feeder is clickable, status is a badge, the rest take their value +
+  // format from the DataTable.
   const columns: GridColumnDef[] = useMemo(
-    () => [
-      {
-        id: 'feederId',
-        header: 'Feeder',
-        cellRenderer: (value, row) => (
-          <button
-            type="button"
-            onClick={() => openFeeder(String(row['feederId'] ?? value))}
-            className="font-medium text-brand-foreground underline tabular-nums"
-          >
-            {String(value)}
-          </button>
-        ),
-      },
-      { id: 'lineMiles', header: 'Line miles', numericStyling: true },
-    ],
+    () =>
+      GRID_COLUMNS.map((c): GridColumnDef => {
+        if (c.id === 'feederId') {
+          return {
+            id: c.id,
+            header: c.header,
+            cellRenderer: (value, row) => (
+              <button
+                type="button"
+                onClick={() => openFeeder(String(row['feederId'] ?? value))}
+                className="font-medium text-brand-foreground underline tabular-nums"
+              >
+                {String(value)}
+              </button>
+            ),
+          };
+        }
+        if (c.id === 'status') {
+          return {
+            id: c.id,
+            header: c.header,
+            cellRenderer: (value) => <StatusBadge status={String(value ?? '')} />,
+          };
+        }
+        return { id: c.id, header: c.header, ...(c.numericStyling ? { numericStyling: true } : {}) };
+      }),
     [openFeeder],
   );
 

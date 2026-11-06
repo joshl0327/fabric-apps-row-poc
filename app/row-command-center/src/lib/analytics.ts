@@ -35,7 +35,10 @@ const numOrNull = (v: unknown): number | null => (v == null || v === '' ? null :
 const dateOrNull = (v: unknown): string | null =>
   v == null || v === '' ? null : String(v).slice(0, 10);
 
-function toGridRow(r: Record<string, unknown>): GridRow {
+/** Map one connector result record (keyed by the DAX result's table-prefixed
+ * column names, e.g. `DIM_CIRCUIT[FEEDER_ID]`, `[LineMiles]`, `[Status]`) to a
+ * GridRow. Exported so a test can assert every column is carried through. */
+export function toGridRow(r: Record<string, unknown>): GridRow {
   return {
     feederId: str(r['DIM_CIRCUIT[FEEDER_ID]']),
     circuitName: str(r['DIM_CIRCUIT[CIRCUIT_NAME]']),
@@ -59,7 +62,7 @@ export async function getKpis(): Promise<Kpis> {
     dueSoon: Number(row['[FeedersDueSoon]'] ?? 0),
     overdue: Number(row['[FeedersOverdue]'] ?? 0),
     coverage: Number(row['[Coverage]'] ?? 0),
-    dqIssues: Number(row['[DQIssues]'] ?? 0),
+    feedersWithDqIssues: Number(row['[FeedersWithDqIssues]'] ?? 0),
   };
 }
 

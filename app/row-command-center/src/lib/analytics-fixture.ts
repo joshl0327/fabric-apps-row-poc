@@ -17,7 +17,7 @@ export const FIXTURE_KPIS: Kpis = {
   dueSoon: 2,
   overdue: 2,
   coverage: 0.6667,
-  dqIssues: 6,
+  feedersWithDqIssues: 4, // the 4 hasDqIssue rows below (affected feeders, not issue count)
 };
 
 export const FIXTURE_GRID: GridRow[] = [
