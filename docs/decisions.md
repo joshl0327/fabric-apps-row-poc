@@ -199,3 +199,26 @@ BrilliT standards and AGENTS.md. Triage:
   tooltip, measure-driven subtitle — the approved deviations.
 - Re-capture at exact 1920×1080 to rule out off-canvas placement (the empty band
   above/below content in the captures is a screenshot-height artifact).
+
+## 2026-11-06 — Second Fabric App (ROW Command Center, prompt 18)
+
+- **Template = `dataapp` (Fabric data-apps), by Josh's call.** Flagged that it
+  ships charting/UI libraries (fabric-visuals, fabric-datagrid, framer-motion,
+  lucide-react) that conflict with the "no charting/UI libraries" preference and
+  cost ~5–6× the first app's bundle. Josh chose it anyway (the prompt named the
+  data-apps template first); the agent recommended `todoapp`. Charts/grid use the
+  template's own components per ruling; `framer-motion` was then removed as unused.
+- **Second app reads the same model and writes the same SQL DB as the first app.**
+  `row_pbi_poc` via `fabric-semanticmodel` (DAX, delegated); `row-tracker` via
+  `fabric-sqldatabase` (delegated, `read,create,update`). The SQL connector
+  defaulted to `application` auth and was changed to `delegated` before anything
+  deploys.
+- **Connector entity grants mirror the first app** (ClearingPlans read+update,
+  ChangeLogs read+create append-only, `changed_by` pinned). Because both apps now
+  write these tables, the grants live in two entity files; a change to either is
+  a tier-boundary change (`docs/governance.md`).
+- **Two measures added** (`Feeders Without a Date`, `% Plan Date Scheduled`),
+  validated live; expected 10 and 93.5% on the original load (`docs/measures.md`).
+- **English-only at runtime**; per-locale chunks still emitted by
+  `fabric-visuals-core` and left in place (removing them would override the
+  vendor — out of scope).

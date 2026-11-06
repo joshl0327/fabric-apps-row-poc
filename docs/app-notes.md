@@ -395,3 +395,40 @@ database and SQL endpoint in ROW-POC-Prod. Sign-in on the prod app works.
 - **Audit fields: addressed** by the change-log step. `ChangeLog.changed_by` is
   server-pinned to the caller's email. `ClearingPlan.updated_by` stays client-set
   (not audit-grade) — the `ChangeLog` is the trustworthy record.
+
+## Second app: ROW Command Center (prompt 18, 2026-11-06)
+
+A **second** Fabric App, `app/row-command-center`, built in one session to show
+the payoff of the guardrails: **one semantic model, one SQL database, two front
+ends.** `app/row-tracker` is unchanged. Full detail in
+`app/row-command-center/README.md`; the essentials:
+
+- **Template:** `create-rayfin` 1.36.2 `dataapp` (Fabric data-apps). Josh chose it
+  over `todoapp` knowing it ships `fabric-visuals`/`fabric-datagrid` (used for the
+  grid, KPI cards and the Vega schedule per the ruling) at a ~5–6× bundle cost —
+  see `docs/governance.md`.
+- **Two connectors (ROW-POC-Dev only):** `row_pbi_poc` (`fabric-semanticmodel`,
+  delegated, `executeQuery`) for every number/status via DAX; `row-tracker`
+  (`fabric-sqldatabase`, delegated, `read,create,update`) for edits. Entities
+  generated for `ClearingPlans` (read+update) and `ChangeLogs` (read+create,
+  `changed_by` pinned) only — not `Users`/`storage.objects`.
+- **Enforcement (Category A):** the connector `@role` policies enforce the same
+  grants as the first app's native entities, proven offline by
+  `src/__tests__/connectorPermissions.test.ts` (ConnectorSchemaAnalyzer +
+  ConnectorConfigGenerator over the tsc-compiled decorators). The `changed_by`
+  pin compiles to `@claims.email eq @item.changedBy` — note it keys on the mapped
+  GraphQL field name (`changedBy`), where the first app's native entity used the
+  column name (`changed_by`); same enforcement.
+- **Two measures added** to the model for this app (`Feeders Without a Date`,
+  `% Plan Date Scheduled` = "Coverage") — see `docs/measures.md`.
+- **Safe DAX:** `src/lib/dax/` builds every query; no user text is interpolated
+  (allowlists + a feeder-id pattern), with tests.
+- **Copied rules:** `validation.ts`, `errors.ts`, `changeLogModel.ts` are copied
+  from the first app (no shared package) — a change must be made in both apps in
+  the same PR (`docs/governance.md`, tier boundary).
+- **Local run:** `npm run dev:frontend` (plain Vite) with a DEV-only synthetic
+  sign-in and in-memory fixtures; DAX-side numbers are static fixtures offline.
+- **Checks:** `npm run build`, `npm test` (149 tests), `npm run lint` all pass.
+- **Open / live-only:** real DAX + SQL, the live edit→report loop, and Fabric SSO
+  are verifiable only after a dev deploy. The Schedule bar chart isn't click-wired
+  (aggregated); per-locale chunks still ship from `fabric-visuals-core`.
