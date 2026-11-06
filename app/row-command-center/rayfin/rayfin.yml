@@ -17,3 +17,27 @@ services:
     folder: dist
     buildCommand: npm run build:fabric
     indexDocument: index.html
+connectors:
+  - name: row_pbi_poc
+    config:
+      workspaceId: 964345ef-fc6a-48f6-b58a-51ff6d5d60e9
+      itemId: 2d1846aa-bb70-416a-a6d4-0b89c8a2058a
+    auth:
+      type: delegated
+    version: "1"
+    operations:
+      - name: executeQuery
+    type: fabric-semanticmodel
+  - name: row-tracker
+    type: fabric-sqldatabase
+    config:
+      workspaceId: 964345ef-fc6a-48f6-b58a-51ff6d5d60e9
+      itemId: b20ebf8c-cc8b-4a5d-8a85-4a92b359da7e
+    # Category A defaults to application identity; this app runs every data-source
+    # call as the signed-in user (per-user access + server-pinned changed_by).
+    auth:
+      type: delegated
+    operations:
+      - name: read
+      - name: create
+      - name: update
