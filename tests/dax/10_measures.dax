@@ -133,3 +133,44 @@ ORDER BY [Feeders] DESC
 EVALUATE ROW ( "Title (no selection)", [Feeder Detail Title] )
 // RESULT: "Feeder (select a feeder)" with no feeder selected; on the
 // drillthrough it reads e.g. "Feeder 214-2".
+
+// ---------------------------------------------------------------------------
+// 10 - Plan: command-center measures (prompt 18, Part A step 6)
+// ---------------------------------------------------------------------------
+// Two measures added for the row-command-center app (same @Measures home,
+// folder 10 - Plan). Validated against the live composite model in Desktop on
+// 2026-11-05. Logic complements the certainty split: Scheduled (confirmed or
+// tentative, a real date) + Without a Date (next year or TBD) = Feeders in Plan.
+
+// Feeders Without a Date — certainty 'next year' or 'TBD' (no firm date).
+// Expected 10 on the original load (next year 2 + TBD 8).
+EVALUATE
+ROW (
+    "Feeders Without a Date", [Feeders Without a Date],
+    "Feeders Next Year", [Feeders Next Year],
+    "Feeders TBD", [Feeders TBD]
+)
+// RESULT: 10, 2, 8 — matches Feeders Next Year + Feeders TBD (2026-11-05).
+
+// % Plan Date Scheduled — confirmed or tentative, divided by Feeders in Plan.
+// Labelled "Coverage" on the app's Today page. Expected 93.5% (143/153).
+EVALUATE
+ROW (
+    "% Plan Date Scheduled", [% Plan Date Scheduled],
+    "% Plan Date Confirmed", [% Plan Date Confirmed],
+    "Feeders in Plan", [Feeders in Plan]
+)
+// RESULT: 0.9346 (93.5% = 143/153), 0.9216 (141/153), 153 (2026-11-05).
+// Scheduled 143 = confirmed 141 + tentative 2 on this date; the confirmed/
+// tentative split drifts with app edits but the 143/10 scheduled-vs-no-date
+// split (and so both measures) is unchanged from the original load.
+
+// Reconciliation: the two complementary measures must cover every feeder.
+EVALUATE
+ROW (
+    "Scheduled + Without a Date (=153)",
+        CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] IN { "confirmed", "tentative" } )
+            + [Feeders Without a Date],
+    "Feeders in Plan (=153)", [Feeders in Plan]
+)
+// RESULT: 153, 153 — the certainty split is complete (143 + 10 = 153).

@@ -170,6 +170,21 @@ table @Measures
 		displayFolder: 90 - Helpers
 		lineageTag: 0cfe12f2-a578-4b12-857d-e698a47b850c
 
+	/// Feeders whose date certainty is 'next year' or 'TBD' — no firm next-clearing date yet. Equals Feeders Next Year + Feeders TBD; complements the confirmed/tentative feeders counted by % Plan Date Scheduled.
+	measure 'Feeders Without a Date' = CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] IN { "next year", "TBD" } )
+		formatString: #,0
+		displayFolder: 10 - Plan
+		lineageTag: 99aa5703-317c-436e-9d5b-b65111c24b61
+
+	/// Share of feeders in the plan whose date certainty is 'confirmed' or 'tentative' (a real date is scheduled), divided by Feeders in Plan. Shown as "Coverage" on the command-center Today page.
+	measure '% Plan Date Scheduled' =
+			VAR _scheduled = CALCULATE ( [Feeders in Plan], FACT_ROW_PLAN[DATE_CERTAINTY] IN { "confirmed", "tentative" } )
+			RETURN
+			    DIVIDE ( _scheduled, [Feeders in Plan] )
+		formatString: 0.0%
+		displayFolder: 10 - Plan
+		lineageTag: b17a11f9-eaf3-405d-ac96-a199df43420e
+
 	column Column
 		isHidden
 		formatString: 0
