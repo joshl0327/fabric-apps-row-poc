@@ -138,9 +138,11 @@ async function executeSemanticModelQuery(
     query: string,
 ): Promise<SemanticModelQueryResult> {
     try {
-        // The generated schema lists only the scaffolded names (none in the template); the hook
-        // takes any name, and an unknown one throws, which is reported below.
-        const connectors = getRayfinClient().connectors as SemanticModelConnectors;
+        // The hook takes any semantic-model connector name; an unknown one throws and is
+        // reported below. The app's connector set is mixed (the Category A `row-tracker` SQL
+        // connector has no executeQuery), so narrow through `unknown` — this hook only ever
+        // indexes semantic-model names at runtime.
+        const connectors = getRayfinClient().connectors as unknown as SemanticModelConnectors;
         return await connectors[connection].executeQuery({ query });
     } catch (err) {
         return toThrownQueryResult(err, connection);
