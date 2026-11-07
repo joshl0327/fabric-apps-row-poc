@@ -13,11 +13,11 @@ job that runs from `main` and only after a human approval — see `docs/deploy.m
 
 ## What runs
 
-Two independent jobs:
+Three independent jobs:
 
 ### `App build, test, lint` (Ubuntu)
 
-Runs in `app/row-tracker`:
+Runs in `app/row-tracker` (the first app):
 
 1. `npm ci` — clean install from the committed `package-lock.json`.
 2. `npm run build` — `rayfin env --framework vite` (prebuild) then
@@ -41,6 +41,36 @@ fails the build when a *remote* `VITE_RAYFIN_API_URL` is set without a
 publishable key, which never happens here), and `rayfin env` just writes a
 `.env.local` from whatever `RAYFIN_PUBLIC_*` it finds. Verified by running the
 full `build → test → lint` chain locally with no `rayfin/.env` present.
+
+### `Command Center build, test, lint` (Ubuntu)
+
+Runs in `app/row-command-center` (the second app). Same shape as the `App` job —
+`npm ci`, `npm run build` first for the same reason (the connector permission
+test reads the `tsc`-compiled entities from `rayfin/.temp/compiled/`), Node
+pinned to 24, `RAYFIN_TELEMETRY_OPTOUT=1`, no Fabric sign-in — with **one extra
+step** between build and test:
+
+1. `npm ci`.
+2. `npm run build`.
+3. **Check bundle is parseable** — `node --check` over every `dist/assets/*.js`,
+   failing on any parse error.
+4. `npm test` — the Vitest suite (152 tests).
+5. `npm run lint` — ESLint.
+
+**Why the `node --check` step.** The second app's connectors use TC39
+decorators. At one point the production bundler (rolldown/oxc) shipped those
+decorators **un-lowered**, so `tsc -b && vite build` exited 0 but the bundle was
+unparseable JavaScript — a blank page in the browser, and `rayfin up` rejected
+it ("The built bundle is not parseable JavaScript"). `vite build` never checks
+parseability and `tsc` only compiles the separate `rayfin/.temp/compiled` copy,
+so neither caught it. The fix lowers the decorators in `vite.config.ts`; this
+step runs **the same parse `rayfin up` does** over each shipped chunk, so the
+regression can't come back silently. See `docs/app-notes.md` and
+`docs/decisions.md` (2026-11-06).
+
+This job is a **required check** too (see the ruleset list below). Adding it
+crossed the governance tier boundary (a `.github/workflows` change), so it took
+app-team review — see `docs/governance.md`.
 
 ### `Report PBIR validate` (Ubuntu)
 
@@ -69,8 +99,9 @@ which `validate` never uses.
   - `actions/setup-node` → `949feb2413d6458794dcd2491c4babbbce0c15c1` (v7.1.0)
 
   Both SHAs were resolved from the actions' latest release tags with `gh api`.
-- **Clear, stable job names** (`App build, test, lint`, `Report PBIR validate`)
-  so they can be selected as required checks.
+- **Clear, stable job names** (`App build, test, lint`, `Command Center build,
+  test, lint`, `Report PBIR validate`) so they can be selected as required
+  checks.
 
 ## How to read a failure
 
@@ -80,6 +111,7 @@ Open the failed run from the PR's **Checks** tab and expand the failed step.
 |---|---|
 | Install dependencies (`npm ci`) | `package-lock.json` is out of sync with `package.json`. Run `npm install` in `app/row-tracker` and commit the updated lockfile. |
 | Build | A TypeScript compile error (`tsc -b`) or a Vite build error. The log names the file and line. |
+| Check bundle is parseable (Command Center) | A shipped `dist/assets/*.js` chunk is not parseable JavaScript — usually un-lowered syntax (e.g. raw TC39 decorators). Check `vite.config.ts`'s decorator-lowering plugin. |
 | Test | A Vitest assertion failed. If it is `changeLogPermissions.test.ts`, the build output is missing or an entity's permissions changed — check the decorators in `rayfin/data/`. |
 | Lint | An ESLint error. (Warnings, like the known one in `AuthContext.tsx`, do not fail the job.) |
 | Validate report | PBIR conformance error. The JSON diagnostic names the code and object; fix the report files and re-run. |
@@ -87,9 +119,10 @@ Open the failed run from the PR's **Checks** tab and expand the failed step.
 ## Ruleset change (do this after merge)
 
 In the GitHub **"Protect main"** ruleset, under **Require status checks to
-pass**, add these two checks (type the exact names):
+pass**, add these three checks (type the exact names):
 
 - `App build, test, lint`
+- `Command Center build, test, lint`
 - `Report PBIR validate`
 
 Then confirm **"Require a pull request before merging"** is on so the checks
