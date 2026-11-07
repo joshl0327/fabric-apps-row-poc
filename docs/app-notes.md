@@ -428,7 +428,7 @@ ends.** `app/row-tracker` is unchanged. Full detail in
   the same PR (`docs/governance.md`, tier boundary).
 - **Local run:** `npm run dev:frontend` (plain Vite) with a DEV-only synthetic
   sign-in and in-memory fixtures; DAX-side numbers are static fixtures offline.
-- **Checks:** `npm run build`, `npm test` (149 tests), `npm run lint` all pass.
+- **Checks:** `npm run build`, `npm test` (152 tests), `npm run lint` all pass.
 - **Correction (2026-11-06).** The Checkpoint 2 claim that the local run worked
   was wrong. At Checkpoint 2 the app built, tested and linted green, **but the
   shipped bundle and `dev:frontend` were actually broken**: rolldown/oxc passed

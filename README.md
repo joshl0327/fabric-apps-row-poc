@@ -4,10 +4,25 @@ A proof of concept showing that a BI team can build analytic apps safely with
 Power BI, Snowflake and Fabric Apps — an AI coding agent does the build and a
 human reviews every change. The domain is a right-of-way (vegetation) clearing
 tracker for an electric cooperative's distribution feeders, replacing an
-error-prone shared Excel spreadsheet. It has two halves: a **Power BI report**
-on a semantic model, and a **Fabric App** (`app/row-tracker`, Rayfin SDK/CLI,
-TypeScript) that handles the data edits the report can't. Everything here runs
-on synthetic data only — no real cooperative, people, places or account numbers.
+error-prone shared Excel spreadsheet. At its centre is a **Power BI report** on
+a semantic model, with **two Fabric Apps** (Rayfin SDK/CLI, TypeScript) over the
+same data. Everything here runs on synthetic data only — no real cooperative,
+people, places or account numbers.
+
+## Two apps
+
+Both apps read the **same published semantic model** and write the **same Fabric
+SQL database**; they share the `ClearingPlans` / `ChangeLogs` tables and their
+write rules.
+
+- **`app/row-tracker`** — the first app and the end-to-end POC: synthetic data →
+  Snowflake → semantic model → report → editor app → a prod deploy gated by a
+  human approval (GitHub Actions). This is the app most of the docs describe.
+- **`app/row-command-center`** — the second app, built in one session: an analyst
+  front end that reads every number and status from the semantic model (DAX, via
+  the `fabric-semanticmodel` connector) and writes edits to the SQL database (via
+  the `fabric-sqldatabase` connector). **Dev only** (`ROW-POC-Dev`), deployed by
+  hand; it has no prod workspace and no Actions job.
 
 ## Environment ladder
 
@@ -27,7 +42,7 @@ workspace without a human approval.
 
 ## Start here (reading order for a reviewer)
 
-The app and report, from the data model outward:
+### The first app (`app/row-tracker`) and report, from the data model outward:
 
 1. [`app/row-tracker/rayfin/data/ClearingPlan.ts`](app/row-tracker/rayfin/data/ClearingPlan.ts)
    and [`ChangeLog.ts`](app/row-tracker/rayfin/data/ChangeLog.ts) — the entities
@@ -47,6 +62,22 @@ The app and report, from the data model outward:
 7. [`.github/workflows/`](.github/workflows/) — [`ci.yml`](.github/workflows/ci.yml)
    (checks on every PR) and [`deploy-prod.yml`](.github/workflows/deploy-prod.yml)
    (the only path to prod, gated by a human approval).
+
+### The second app (`app/row-command-center`), from the connectors inward:
+
+1. [`app/row-command-center/rayfin/rayfin.yml`](app/row-command-center/rayfin/rayfin.yml)
+   — the two connectors (`fabric-semanticmodel` for DAX, `fabric-sqldatabase` for
+   edits).
+2. [`app/row-command-center/rayfin/connectors/row-tracker/`](app/row-command-center/rayfin/connectors/row-tracker/)
+   — the SQL entities and their `@role` policies (the same grants as the first
+   app, including the server-pinned `changed_by`).
+3. [`app/row-command-center/src/lib/dax/`](app/row-command-center/src/lib/dax/)
+   — the safe DAX queries (allowlists and a feeder-id pattern; no user text
+   interpolated).
+4. [`app/row-command-center/src/pages/`](app/row-command-center/src/pages/) — the
+   UI (Today, Feeders, Schedule, Activity).
+5. [`app/row-command-center/README.md`](app/row-command-center/README.md) — the
+   full write-up.
 
 ## Run it locally (no Fabric)
 

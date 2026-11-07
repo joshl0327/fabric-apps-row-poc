@@ -8,6 +8,22 @@ for a person to approve it** before it touches Fabric.
 
 This is Phase 5, part 2. Part 1 (`docs/ci.md`) added the read-only PR checks.
 
+Everything below is about the **first app** (`app/row-tracker`). The second app
+has a different, simpler deploy story:
+
+## The second app (`app/row-command-center`) is dev only
+
+`app/row-command-center` has **no prod workspace and no Actions deploy job**. It
+exists only in the dev workspace `ROW-POC-Dev`, and it is deployed **by hand**:
+a person runs `npx rayfin up` from `app/row-command-center` after review (never
+the coding agent, never without an ask — see `AGENTS.md`). There is no approval
+gate because there is no prod target to gate.
+
+`deploy-prod.yml` watches only `app/row-tracker/**`, so a change under
+`app/row-command-center/**` **never triggers a prod deploy** — the second app's
+CI (`Command Center build, test, lint`, see `docs/ci.md`) is its only required
+GitHub check.
+
 ## How a prod deploy happens
 
 1. **Merge to `main`.** A pull request that changes `app/row-tracker/**` is
